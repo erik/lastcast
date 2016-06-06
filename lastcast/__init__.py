@@ -7,7 +7,7 @@ import toml
 
 
 # TODO: ...and probably other things...
-APP_WHITELIST = [u'Spotify']
+APP_WHITELIST = [u'Spotify', u'Google Play Music']
 
 
 class ScrobbleListener(object):
