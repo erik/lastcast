@@ -69,6 +69,8 @@ def load_config(path):
     for k in ['api_key', 'api_secret', 'user_name', 'password']:
         assert k in config.get('lastfm', {}), 'Missing required lastfm option: %s' % k
 
+    return config
+
 
 @click.command()
 @click.option('--config', required=False, help='Config file location')
