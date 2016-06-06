@@ -24,22 +24,19 @@ class ScrobbleListener(object):
 
         self.last_scrobbled = {}
 
+    def poll(self):
+        status = self.cast.media_controller.status
+
+        # Ignore when the player is paused or in an unknown app.
+        if not status.player_is_playing or \
+           self.cast.app_display_name not in APP_WHITELIST:
+            continue
+
+        self._on_status(status)
+
     def _get_chromecast(self, config):
         # TODO: use config to grab correct chromecast
         return pychromecast.get_chromecast()
-
-    def start(self):
-        while True:
-            status = self.cast.media_controller.status
-
-            # Ignore when the player is paused or in an unknown app.
-            if not status.player_is_playing or \
-               self.cast.app_display_name not in APP_WHITELIST:
-                continue
-
-            self._on_status(status)
-
-            time.sleep(5)
 
     def _on_status(self, status):
         meta = {
@@ -78,7 +75,10 @@ def main(config, verbose):
     config = load_config('lastcast.toml')
 
     listener = ScrobbleListener(config)
-    listener.start()
+
+    while True:
+        listener.poll()
+        time.sleep(5)
 
 
 if __name__ == '__main__':
