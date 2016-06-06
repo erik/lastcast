@@ -1,6 +1,9 @@
 [lastfm]
-user_name = foobar
-password = hunter2
+user_name = "foobar"
+password = "hunter2"
+# Create these here: http://www.last.fm/api/account/create
+api_key = "..."
+api_secret = "..."
 
 [chromecast]
 name = "Living Room"
