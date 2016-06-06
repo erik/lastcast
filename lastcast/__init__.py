@@ -64,7 +64,10 @@ class ScrobbleListener(object):
 
 
 def load_config(path):
-    return toml.load(path)
+    config = toml.load(path)
+
+    for k in ['api_key', 'api_secret', 'user_name', 'password']:
+        assert k in config.get('lastfm', {}), 'Missing required lastfm option: %s' % k
 
 
 @click.command()
