@@ -30,7 +30,7 @@ class ScrobbleListener(object):
         # Ignore when the player is paused or in an unknown app.
         if not status.player_is_playing or \
            self.cast.app_display_name not in APP_WHITELIST:
-            continue
+            return
 
         self._on_status(status)
 
