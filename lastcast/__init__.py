@@ -23,6 +23,7 @@ class ScrobbleListener(object):
             password_hash=pylast.md5(config['lastfm']['password']))
 
         self.last_scrobbled = {}
+        self.last_played = {}
 
     def poll(self):
         # media_controller isn't always available.
@@ -49,10 +50,7 @@ class ScrobbleListener(object):
             'title': status.title,
         }
 
-        # Don't scrobble the same thing over and over
-        # FIXME: some bizarre people like putting songs on repeat
-        if meta == self.last_scrobbled:
-            return
+        self._now_playing(meta)
 
         # Only scrobble if track has played 50% through (or 120 seconds,
         # whichever comes first).
@@ -60,7 +58,19 @@ class ScrobbleListener(object):
            (status.current_time / status.duration) >= SCROBBLE_THRESHOLD_PCT:
             self._scrobble(meta)
 
+    def _now_playing(self, track_meta):
+        if track_meta == self.last_played:
+            return
+
+        self.lastfm.update_now_playing(**track_meta)
+        self.last_played = track_meta
+
     def _scrobble(self, track_meta):
+        # Don't scrobble the same thing over and over
+        # FIXME: some bizarre people like putting songs on repeat
+        if track_meta == self.last_scrobbled:
+            return
+
         print('Scrobbling track', track_meta)
         self.lastfm.scrobble(timestamp=int(time.time()), **track_meta)
         self.last_scrobbled = track_meta
