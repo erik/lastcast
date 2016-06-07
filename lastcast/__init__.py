@@ -25,12 +25,15 @@ class ScrobbleListener(object):
         self.last_scrobbled = {}
 
     def poll(self):
-        self.cast.media_controller.update_status(blocking=True)
+        # media_controller isn't always available.
+        if self.cast.app_display_name not in APP_WHITELIST:
+            return
+
+        self.cast.media_controller.update_status()
         status = self.cast.media_controller.status
 
-        # Ignore when the player is paused or in an unknown app.
-        if not status.player_is_playing or \
-           self.cast.app_display_name not in APP_WHITELIST:
+        # Ignore when the player is paused.
+        if not status.player_is_playing:
             return
 
         self._on_status(status)
@@ -49,7 +52,6 @@ class ScrobbleListener(object):
         # Don't scrobble the same thing over and over
         # FIXME: some bizarre people like putting songs on repeat
         if meta == self.last_scrobbled:
-            print 'Already scrobbled this track.', meta
             return
 
         # Only scrobble if track has played 50% through (or 120 seconds,
@@ -59,7 +61,7 @@ class ScrobbleListener(object):
             self._scrobble(meta)
 
     def _scrobble(self, track_meta):
-        print 'Scrobbling track', track_meta
+        print('Scrobbling track', track_meta)
         self.lastfm.scrobble(timestamp=int(time.time()), **track_meta)
         self.last_scrobbled = track_meta
 
