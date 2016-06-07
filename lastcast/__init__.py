@@ -104,18 +104,56 @@ def load_config(path):
     return config
 
 
+def config_wizard():
+    click.echo('''
+You'll need to create a last.fm API application first. Do so here:
+
+    http://www.last.fm/api/account/create
+
+What you fill in doesn't matter at all, just make sure to save the API
+Key and Shared Secret.
+''')
+
+    config = {
+        'lastfm': {
+            key: click.prompt(key, type=str)
+            for key in ['user_name', 'password', 'api_key', 'api_secret']
+        }
+    }
+
+    available = pychromecast.get_chromecasts_as_dict().keys()
+
+    if len(available) != 1 or click.confirm('Manually specify cast device?'):
+        click.echo('\n\nAvailable cast devices: %s' % ', '.join(available))
+
+        config['chromecast'] = {
+            'name': click.prompt('Which device should be used?')
+        }
+
+    generated = toml.dumps(config)
+    click.echo('Generated config:\n\n%s' % generated)
+
+    if click.confirm('Write to ~/.lastcast.toml?'):
+        with open(os.path.expanduser('~/.lastcast.toml'), 'w') as fp:
+            fp.write(generated)
+
+
 @click.command()
 @click.option('--config', required=False, help='Config file location')
 @click.option('--verbose/-v', required=False, default=False, help='Be loud')
-def main(config, verbose):
-    paths = [config] if config else ['./lastcast.toml', '~/lastcast.toml']
+@click.option('--wizard', is_flag=True, help='Generate a lastcast config.')
+def main(config, verbose, wizard):
+    if wizard:
+        return config_wizard()
+
+    paths = [config] if config else ['./lastcast.toml', '~/.lastcast.toml']
 
     for path in paths:
         if os.path.exists(path):
             config = load_config(path)
             break
     else:
-        click.echo('Config file not found!')
+        click.echo('Config file not found!\n\nUse--wizard to create a config')
         sys.exit(1)
 
     listener = ScrobbleListener(config)
