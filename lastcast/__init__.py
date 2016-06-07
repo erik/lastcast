@@ -150,6 +150,7 @@ def main(config, wizard):
     paths = [config] if config else ['./lastcast.toml', '~/.lastcast.toml']
 
     for path in paths:
+        path = os.path.expanduser(path)
         if os.path.exists(path):
             config = load_config(path)
             break
