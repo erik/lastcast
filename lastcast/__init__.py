@@ -16,7 +16,7 @@ class ScrobbleListener(object):
     def __init__(self, config):
         self.cast = self._get_chromecast(config.get('chromecast', {}))
 
-        self.conn = pylast.LastFMNetwork(
+        self.lastfm = pylast.LastFMNetwork(
             api_key=config['lastfm']['api_key'],
             api_secret=config['lastfm']['api_secret'],
             username=config['lastfm']['user_name'],
@@ -59,7 +59,7 @@ class ScrobbleListener(object):
 
     def _scrobble(self, track_meta):
         print 'Scrobbling track', track_meta
-        self.conn.scrobble(timestamp=int(time.time()), **track_meta)
+        self.lastfm.scrobble(timestamp=int(time.time()), **track_meta)
         self.last_scrobbled = track_meta
 
 
