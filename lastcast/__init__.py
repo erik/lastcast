@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os.path
 import sys
 import time
@@ -140,9 +142,8 @@ Key and Shared Secret.
 
 @click.command()
 @click.option('--config', required=False, help='Config file location')
-@click.option('--verbose/-v', required=False, default=False, help='Be loud')
 @click.option('--wizard', is_flag=True, help='Generate a lastcast config.')
-def main(config, verbose, wizard):
+def main(config, wizard):
     if wizard:
         return config_wizard()
 
