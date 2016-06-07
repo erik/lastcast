@@ -1,3 +1,5 @@
+import os.path
+import sys
 import time
 
 import pylast
@@ -79,8 +81,10 @@ class ScrobbleListener(object):
 def load_config(path):
     config = toml.load(path)
 
+    assert 'lastfm' in config, 'Missing lastfm config block'
+
     for k in ['api_key', 'api_secret', 'user_name', 'password']:
-        assert k in config.get('lastfm', {}), 'Missing required lastfm option: %s' % k
+        assert k in config['lastfm'], 'Missing required lastfm option: %s' % k
 
     return config
 
@@ -89,11 +93,17 @@ def load_config(path):
 @click.option('--config', required=False, help='Config file location')
 @click.option('--verbose/-v', required=False, default=False, help='Be loud')
 def main(config, verbose):
-    # TODO: need, you know, actual config loading.
-    config = load_config('lastcast.toml')
+    paths = [config] if config else ['./lastcast.toml', '~/lastcast.toml']
+
+    for path in paths:
+        if os.path.exists(path):
+            config = load_config(path)
+            break
+    else:
+        click.echo('Config file not found!')
+        sys.exit(1)
 
     listener = ScrobbleListener(config)
-
     while True:
         listener.poll()
         time.sleep(5)
