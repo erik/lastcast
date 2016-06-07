@@ -25,6 +25,7 @@ class ScrobbleListener(object):
         self.last_scrobbled = {}
 
     def poll(self):
+        self.cast.media_controller.update_status(blocking=True)
         status = self.cast.media_controller.status
 
         # Ignore when the player is paused or in an unknown app.
