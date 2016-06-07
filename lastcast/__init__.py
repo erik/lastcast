@@ -153,7 +153,7 @@ def main(config, verbose, wizard):
             config = load_config(path)
             break
     else:
-        click.echo('Config file not found!\n\nUse--wizard to create a config')
+        click.echo('Config file not found!\n\nUse --wizard to create a config')
         sys.exit(1)
 
     listener = ScrobbleListener(config)
