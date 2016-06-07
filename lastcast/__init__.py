@@ -42,8 +42,23 @@ class ScrobbleListener(object):
         self._on_status(status)
 
     def _get_chromecast(self, config):
-        # TODO: use config to grab correct chromecast
-        return pychromecast.get_chromecast()
+        if 'name' in config:
+            cast = pychromecast.get_chromecast(friendly_name=config['name'])
+        else:
+            cast = pychromecast.get_chromecast()
+
+        if cast is None:
+            available = pychromecast.get_chromecasts_as_dict().keys()
+
+            click.echo('Could not connect to device %s\n'
+                       'Available devices: %s ' % (
+                           config.get('name', ''), ', '.join(available)))
+            sys.exit(1)
+
+        # Wait for the device to be available
+        cast.wait()
+        print('Using chromecast: ', cast.device)
+        return cast
 
     def _on_status(self, status):
         meta = {
