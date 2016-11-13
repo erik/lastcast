@@ -11,7 +11,7 @@ import toml
 
 
 # TODO: ...and probably other things...
-APP_WHITELIST = [u'Spotify', u'Google Play Music']
+APP_WHITELIST = [u'Spotify', u'Google Play Music', u'Plex']
 SCROBBLE_THRESHOLD_PCT = 0.50
 SCROBBLE_THRESHOLD_SECS = 120
 
