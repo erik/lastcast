@@ -14,6 +14,7 @@ import toml
 APP_WHITELIST = [u'Spotify', u'Google Play Music']
 SCROBBLE_THRESHOLD_PCT = 0.50
 SCROBBLE_THRESHOLD_SECS = 120
+UNSUPPORTED_MODES = [u'MultizoneLeader']
 
 
 class ScrobbleListener(object):
@@ -32,6 +33,13 @@ class ScrobbleListener(object):
     def poll(self):
         # media_controller isn't always available.
         if self.cast.app_display_name not in APP_WHITELIST:
+            return
+
+        # Certain operating modes do not support the
+        # media_controller.update_status() call. Placing a device into a cast
+        # group is one such case. When running in this config, the
+        # cast.app_id is reported as 'MultizoneLeader'. Ensure we skip.
+        if self.cast.app_id in UNSUPPORTED_MODES:
             return
 
         self.cast.media_controller.update_status()
