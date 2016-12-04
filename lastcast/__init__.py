@@ -49,6 +49,10 @@ class ScrobbleListener(object):
         if not status.player_is_playing:
             return
 
+        # Triggered when we poll in between songs (see issue #6)
+        if status.current_time is None or status.duration is None:
+            return
+        
         self._on_status(status)
 
     def _get_chromecast(self, config):
