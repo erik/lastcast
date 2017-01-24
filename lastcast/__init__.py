@@ -1,13 +1,20 @@
 from __future__ import print_function
 
+import logging
 import os.path
 import sys
 import time
+import traceback
 
 import pylast
 import pychromecast
 import click
 import toml
+
+from pychromecast.error import PyChromecastError
+
+
+logging.basicConfig()
 
 
 # TODO: ...and probably other things...
@@ -19,7 +26,8 @@ UNSUPPORTED_MODES = [u'MultizoneLeader']
 
 class ScrobbleListener(object):
     def __init__(self, config):
-        self.cast = self._get_chromecast(config.get('chromecast', {}))
+        self.cast_config = config.get('chromecast', {})
+        self.cast = self._get_chromecast(self.cast_config)
 
         self.lastfm = pylast.LastFMNetwork(
             api_key=config['lastfm']['api_key'],
@@ -29,6 +37,23 @@ class ScrobbleListener(object):
 
         self.last_scrobbled = {}
         self.last_played = {}
+
+    def listen(self):
+        while True:
+            try:
+                self.poll()
+                time.sleep(5)
+
+            # This could happen due to network hiccups, Chromecast
+            # restarting, race conditions, etc...
+            #
+            # Just take a nap and retry.
+            except PyChromecastError:
+                traceback.print_exc()
+                time.sleep(30)
+
+                print('Reconnecting to cast device...')
+                self.cast = self._get_chromecast(self.cast_config)
 
     def poll(self):
         # media_controller isn't always available.
@@ -52,7 +77,7 @@ class ScrobbleListener(object):
         # Triggered when we poll in between songs (see issue #6)
         if status.current_time is None or status.duration is None:
             return
-        
+
         self._on_status(status)
 
     def _get_chromecast(self, config):
@@ -170,10 +195,8 @@ def main(config, wizard):
         click.echo('Config file not found!\n\nUse --wizard to create a config')
         sys.exit(1)
 
-    listener = ScrobbleListener(config)
-    while True:
-        listener.poll()
-        time.sleep(5)
+    listener = ScrobbleListener(config).listen()
+    listener.listen()
 
 
 if __name__ == '__main__':
