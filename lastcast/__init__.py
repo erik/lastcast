@@ -127,7 +127,7 @@ class ScrobbleListener(object):
         if track_meta == self.last_scrobbled:
             return
 
-        print('Scrobbling track', track_meta)
+        print('Scrobbling: {artist} - {title} [{album}]'.format(**track_meta))
         self.lastfm.scrobble(timestamp=int(time.time()), **track_meta)
         self.last_scrobbled = track_meta
 
