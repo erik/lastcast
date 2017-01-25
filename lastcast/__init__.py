@@ -41,7 +41,8 @@ class ScrobbleListener(object):
     def listen(self):
         while True:
             try:
-                self.poll()
+                if not self.cast.status.is_stand_by:
+                    self.poll()
                 time.sleep(5)
 
             # This could happen due to network hiccups, Chromecast
