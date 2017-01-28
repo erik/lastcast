@@ -15,9 +15,9 @@ setup(
     },
     license='MIT',
     install_requires=[
-        'PyChromecast==0.7.3',
+        'PyChromecast==0.7.7',
         'click==6.2',
-        'pylast==1.6.0',
+        'pylast==1.7.0',
         'toml==0.9.1',
     ]
 )
