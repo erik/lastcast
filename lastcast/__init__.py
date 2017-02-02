@@ -48,7 +48,7 @@ class ScrobbleListener(object):
             # restarting, race conditions, etc...
             #
             # Just take a nap and retry.
-            except PyChromecastError:
+            except (PyChromecastError, pylast.NetworkError):
                 traceback.print_exc()
                 time.sleep(30)
 
