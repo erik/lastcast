@@ -27,7 +27,11 @@ UNSUPPORTED_MODES = [u'MultizoneLeader']
 class ScrobbleListener(object):
     def __init__(self, config):
         self.cast_config = config.get('chromecast', {})
-        self.cast = self._get_chromecast(self.cast_config)
+        self._connect_chromecast(self.cast_config)
+
+        if not self.cast:
+            click.echo('Failed to connect! Exiting')
+            sys.exit(1)
 
         self.lastfm = pylast.LastFMNetwork(
             api_key=config['lastfm']['api_key'],
@@ -41,8 +45,11 @@ class ScrobbleListener(object):
     def listen(self):
         while True:
             try:
-                self.poll()
-                time.sleep(5)
+                if not self.cast:
+                    self._connect_chromecast(self.cast_config)
+                else:
+                    self.poll()
+                    time.sleep(5)
 
             # This could happen due to network hiccups, Chromecast
             # restarting, race conditions, etc...
@@ -53,7 +60,7 @@ class ScrobbleListener(object):
                 time.sleep(30)
 
                 print('Reconnecting to cast device...')
-                self.cast = self._get_chromecast(self.cast_config)
+                self.cast = None
 
     def poll(self):
         self.cast.media_controller.block_until_active()
@@ -82,7 +89,8 @@ class ScrobbleListener(object):
 
         self._on_status(status)
 
-    def _get_chromecast(self, config):
+    def _connect_chromecast(self, config):
+        self.cast = None
         available = pychromecast.get_chromecasts()
 
         if 'name' in config:
@@ -92,17 +100,16 @@ class ScrobbleListener(object):
             click.echo('Could not connect to device %s\n'
                        'Available devices: %s ' % (
                            config.get('name', ''), ', '.join(available)))
-            sys.exit(1)
+            return
 
         if len(available) > 1:
             click.echo('WARNING: Multiple chromecasts available. Choosing first.')
 
-        cast = available[0]
+        self.cast = available[0]
 
         # Wait for the device to be available
-        cast.wait()
-        print('Using chromecast: ', cast.device)
-        return cast
+        self.cast.wait()
+        print('Using chromecast: ', self.cast.device)
 
     def _on_status(self, status):
         meta = {
