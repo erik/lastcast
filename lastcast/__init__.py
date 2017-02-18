@@ -27,7 +27,11 @@ UNSUPPORTED_MODES = [u'MultizoneLeader']
 class ScrobbleListener(object):
     def __init__(self, config):
         self.cast_config = config.get('chromecast', {})
-        self.cast = self._get_chromecast(self.cast_config)
+        self._connect_chromecast(self.cast_config)
+
+        if not self.cast:
+            click.echo('Failed to connect! Exiting')
+            sys.exit(1)
 
         self.lastfm = pylast.LastFMNetwork(
             api_key=config['lastfm']['api_key'],
@@ -41,8 +45,11 @@ class ScrobbleListener(object):
     def listen(self):
         while True:
             try:
-                self.poll()
-                time.sleep(5)
+                if not self.cast:
+                    self._connect_chromecast(self.cast_config)
+                else:
+                    self.poll()
+                    time.sleep(5)
 
             # This could happen due to network hiccups, Chromecast
             # restarting, race conditions, etc...
@@ -53,10 +60,12 @@ class ScrobbleListener(object):
                 time.sleep(30)
 
                 print('Reconnecting to cast device...')
-                self.cast = self._get_chromecast(self.cast_config)
+                self.cast = None
 
     def poll(self):
-        # media_controller isn't always available.
+        self.cast.media_controller.block_until_active()
+
+        # Only certain applications make sense to scrobble.
         if self.cast.app_display_name not in APP_WHITELIST:
             return
 
@@ -75,29 +84,32 @@ class ScrobbleListener(object):
             return
 
         # Triggered when we poll in between songs (see issue #6)
-        if status.current_time is None or status.duration is None:
+        if status.current_time <= 0 or status.duration <= 0:
             return
 
         self._on_status(status)
 
-    def _get_chromecast(self, config):
+    def _connect_chromecast(self, config):
+        self.cast = None
+        available = pychromecast.get_chromecasts()
+
         if 'name' in config:
-            cast = pychromecast.get_chromecast(friendly_name=config['name'])
-        else:
-            cast = pychromecast.get_chromecast()
+            available = [c for c in available if c.device.friendly_name == config['name']]
 
-        if cast is None:
-            available = pychromecast.get_chromecasts_as_dict().keys()
-
+        if not available:
             click.echo('Could not connect to device %s\n'
                        'Available devices: %s ' % (
                            config.get('name', ''), ', '.join(available)))
-            sys.exit(1)
+            return
+
+        if len(available) > 1:
+            click.echo('WARNING: Multiple chromecasts available. Choosing first.')
+
+        self.cast = available[0]
 
         # Wait for the device to be available
-        cast.wait()
-        print('Using chromecast: ', cast.device)
-        return cast
+        self.cast.wait()
+        print('Using chromecast: ', self.cast.device)
 
     def _on_status(self, status):
         meta = {
@@ -160,7 +172,10 @@ Key and Shared Secret.
         }
     }
 
-    available = pychromecast.get_chromecasts_as_dict().keys()
+    available = [
+        cc.device.friendly_name for cc in
+        pychromecast.get_chromecasts()
+    ]
 
     if len(available) != 1 or click.confirm('Manually specify cast device?'):
         click.echo('\n\nAvailable cast devices: %s' % ', '.join(available))
@@ -195,8 +210,7 @@ def main(config, wizard):
         click.echo('Config file not found!\n\nUse --wizard to create a config')
         sys.exit(1)
 
-    listener = ScrobbleListener(config).listen()
-    listener.listen()
+    ScrobbleListener(config).listen()
 
 
 if __name__ == '__main__':
