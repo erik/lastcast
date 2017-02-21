@@ -84,7 +84,7 @@ class ScrobbleListener(object):
             return
 
         # Triggered when we poll in between songs (see issue #6)
-        if status.current_time <= 0 or status.duration <= 0:
+        if not status.current_time or not status.duration:
             return
 
         self._on_status(status)
