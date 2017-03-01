@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import codecs
 import logging
 import os.path
 import sys
@@ -15,6 +16,10 @@ from pychromecast.error import PyChromecastError
 
 
 logging.basicConfig()
+
+# To enable printing of unicode characters in track titles etc.
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 
 
 # TODO: ...and probably other things...
