@@ -106,7 +106,7 @@ class ScrobbleListener(object):
 
         # Wait for the device to be available
         self.cast.wait()
-        click.echo('Using chromecast: ', self.cast.device)
+        click.echo('Using chromecast: %s' % self.cast.device.friendly_name)
 
     def _on_status(self, status):
         meta = {
