@@ -1,21 +1,18 @@
-from __future__ import print_function
-
 import logging
 import os.path
 import sys
 import time
 import traceback
 
+import click
 import pylast
 import pychromecast
-import click
 import toml
 
 from pychromecast.error import PyChromecastError
 
 
 logging.basicConfig()
-
 
 # TODO: ...and probably other things...
 APP_WHITELIST = [u'Spotify', u'Google Play Music', u'Plex']
@@ -59,7 +56,7 @@ class ScrobbleListener(object):
                 traceback.print_exc()
                 time.sleep(30)
 
-                print('Reconnecting to cast device...')
+                click.echo('Reconnecting to cast device...')
                 self.cast = None
 
     def poll(self):
@@ -109,7 +106,7 @@ class ScrobbleListener(object):
 
         # Wait for the device to be available
         self.cast.wait()
-        print('Using chromecast: ', self.cast.device)
+        click.echo('Using chromecast: ', self.cast.device)
 
     def _on_status(self, status):
         meta = {
@@ -139,7 +136,7 @@ class ScrobbleListener(object):
         if track_meta == self.last_scrobbled:
             return
 
-        print(u'Scrobbling: {artist} - {title} [{album}]'.format(**track_meta))
+        click.echo(u'Scrobbling: {artist} - {title} [{album}]'.format(**track_meta))
         self.lastfm.scrobble(timestamp=int(time.time()), **track_meta)
         self.last_scrobbled = track_meta
 
