@@ -39,8 +39,34 @@ Now everything should be set up. When you want to start scrobbling, simply
 run ``lastcast`` in the terminal.
 
 Generally, I run lastcast like so: ``while true; do lastcast; sleep 5; done``. 
-This will help if you frequently move networks or sleep and resume your laptop, 
-as lastcast currently isn't very resilient to these changes (PRs welcome!)
+This will help in case lastcast crashes for whatever reason (please open an issue
+if you see something go wrong!)
+
+Linux / systemd instructions
+----------------------------
+
+1. ``sudo pip install --upgrade lastcast``
+2. ``lastcast --wizard`` 
+3. Edit the code block below as needed (remember to fill in the config path!) 
+   and write to ``/usr/lib/systemd/system/lastcast.service`` 
+   (or ``/etc/systemd/system/lastcast.service`` if the directory doesn't exist)
+4. ``sudo systemctl daemon-reload``
+5. ``sudo systemctl enable lastcast``
+
+.. code-block:: ini
+
+   [Unit]
+   Description=lastcast
+   Requires=networking.service
+   
+   [Service]
+   ExecStart=/usr/local/bin/lastcast --config [PATH TO ~/.lastcast.toml]
+   Restart=always
+   RestartSec=5
+   
+   [Install]
+   WantedBy=network-online.target
+
 
 No Chromecast devices found?
 ----------------------------
