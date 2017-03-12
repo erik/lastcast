@@ -48,7 +48,8 @@ Linux / systemd instructions
 1. ``sudo pip install --upgrade lastcast``
 2. ``lastcast --wizard`` 
 3. Edit the code block below as needed (remember to fill in the config path!) 
-   and write to ``/usr/lib/systemd/system/lastcast.service``
+   and write to ``/usr/lib/systemd/system/lastcast.service`` 
+   (or ``/etc/systemd/system/lastcast.service`` if the directory doesn't exist)
 4. ``sudo systemctl daemon-reload``
 5. ``sudo systemctl enable lastcast``
 
