@@ -110,7 +110,7 @@ class ScrobbleListener(object):
 
     def _on_status(self, status):
         meta = {
-            'artist': status.artist,
+            'artist': status.artist if status.artist else status.album_artist,
             'album': status.album_name,
             'title': status.title,
         }
