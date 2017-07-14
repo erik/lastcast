@@ -15,7 +15,7 @@ from pychromecast.error import PyChromecastError
 logging.basicConfig()
 
 # TODO: ...and probably other things...
-APP_WHITELIST = [u'Spotify', u'Google Play Music', u'Plex']
+APP_WHITELIST = [u'Spotify', u'Google Play Music', u'SoundCloud', u'Plex']
 SCROBBLE_THRESHOLD_PCT = 0.50
 SCROBBLE_THRESHOLD_SECS = 120
 UNSUPPORTED_MODES = [u'MultizoneLeader']
