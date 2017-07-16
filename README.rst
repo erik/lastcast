@@ -4,8 +4,8 @@ lastcast
 Scrobble music playing on Chromecast devices to last.fm
 
 Because I was annoyed that Spotify doesn't scrobble to last.fm when
-using Chromecast. Currently will scrobble tracks playing on Spotify and
-Google Play Music.
+using Chromecast. Currently will scrobble tracks playing on Spotify, 
+Google Play Music, SoundCloud and Plex.
 
 ``pip install lastcast``
 
