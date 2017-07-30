@@ -7,3 +7,5 @@ api_secret = "..."
 
 [chromecast]
 name = "Living Room"
+# (optional) list of chrome cast apps to scrobble from
+app_whitelist = ["Spotify", "Google Play Music"]
