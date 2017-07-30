@@ -14,8 +14,9 @@ from pychromecast.error import PyChromecastError
 
 logging.basicConfig()
 
-# TODO: ...and probably other things...
+# Default set of apps to scrobble from.
 APP_WHITELIST = [u'Spotify', u'Google Play Music', u'SoundCloud', u'Plex']
+
 SCROBBLE_THRESHOLD_PCT = 0.50
 SCROBBLE_THRESHOLD_SECS = 120
 UNSUPPORTED_MODES = [u'MultizoneLeader']
@@ -25,6 +26,7 @@ class ScrobbleListener(object):
     def __init__(self, config):
         self.cast_config = config.get('chromecast', {})
         self._connect_chromecast(self.cast_config)
+        self.app_whitelist = self.cast_config.get('app_whitelist', APP_WHITELIST)
 
         if not self.cast:
             click.echo('Failed to connect! Exiting')
@@ -63,7 +65,7 @@ class ScrobbleListener(object):
         self.cast.media_controller.block_until_active()
 
         # Only certain applications make sense to scrobble.
-        if self.cast.app_display_name not in APP_WHITELIST:
+        if self.cast.app_display_name not in self.app_whitelist:
             return
 
         # Certain operating modes do not support the
@@ -166,7 +168,8 @@ Key and Shared Secret.
         'lastfm': {
             key: click.prompt(key, type=str)
             for key in ['user_name', 'password', 'api_key', 'api_secret']
-        }
+        },
+        'chromecast': {}
     }
 
     available = [
@@ -174,17 +177,26 @@ Key and Shared Secret.
         pychromecast.get_chromecasts()
     ]
 
-    if len(available) != 1 or click.confirm('Manually specify cast device?'):
+    if len(available) == 1:
+        config['chromecast']['name'] = available[0]
+
+    if click.confirm('Manually specify cast device?', default=True):
         click.echo('\n\nAvailable cast devices: %s' % ', '.join(available))
 
-        config['chromecast'] = {
-            'name': click.prompt('Which device should be used?')
-        }
+        config['chromecast']['name'] = click.prompt('Which device should be used?')
+
+    click.echo('\n\nDefault chromecast apps to scrobble from: %s' %
+               ', '.join(APP_WHITELIST))
+
+    apps = click.prompt('Comma separated apps [blank for default]')
+    if apps:
+        apps = [app.strip() for app in apps.split(',')]
+        config['chromecast']['app_whitelist'] = apps
 
     generated = toml.dumps(config)
     click.echo('Generated config:\n\n%s' % generated)
 
-    if click.confirm('Write to ~/.lastcast.toml?'):
+    if click.confirm('Write to ~/.lastcast.toml?', default=True):
         with open(os.path.expanduser('~/.lastcast.toml'), 'w') as fp:
             fp.write(generated)
 
