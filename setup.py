@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='lastcast',
-    version='0.1.9',
+    version='0.2.0',
     description='Scrobble music to last.fm from Chromecast.',
     author='Erik Price',
     url='https://github.com/erik/lastcast',
