@@ -189,8 +189,9 @@ Key and Shared Secret.
                ', '.join(APP_WHITELIST))
 
     apps = click.prompt('Comma separated apps [blank for default]')
+    apps = [app.strip() for app in apps.split(',') if app.strip() != ""]
+
     if apps:
-        apps = [app.strip() for app in apps.split(',')]
         config['chromecast']['app_whitelist'] = apps
 
     generated = toml.dumps(config)
