@@ -32,11 +32,21 @@ class ScrobbleListener(object):
             click.echo('Failed to connect! Exiting')
             sys.exit(1)
 
-        self.lastfm = pylast.LastFMNetwork(
-            api_key=config['lastfm']['api_key'],
-            api_secret=config['lastfm']['api_secret'],
-            username=config['lastfm']['user_name'],
-            password_hash=pylast.md5(config['lastfm']['password']))
+        self.scrobblers = []
+
+        if 'lastfm' in config:
+            self.scrobblers.append(pylast.LastFMNetwork(
+                api_key=config['lastfm']['api_key'],
+                api_secret=config['lastfm']['api_secret'],
+                username=config['lastfm']['user_name'],
+                password_hash=pylast.md5(config['lastfm']['password'])))
+
+        if 'librefm' in config:
+            self.scrobblers.append(pylast.LibreFMNetwork(
+                session_key=config['librefm']['session_key'],
+                username=config['librefm']['user_name'],
+                password_hash=pylast.md5(config['librefm']['password'])
+            ))
 
         self.last_scrobbled = {}
         self.last_played = {}
@@ -129,7 +139,9 @@ class ScrobbleListener(object):
         if track_meta == self.last_played:
             return
 
-        self.lastfm.update_now_playing(**track_meta)
+        for scrobbler in self.scrobblers:
+            scrobbler.update_now_playing(**track_meta)
+
         self.last_played = track_meta
 
     def _scrobble(self, track_meta):
@@ -139,7 +151,10 @@ class ScrobbleListener(object):
             return
 
         click.echo(u'Scrobbling: {artist} - {title} [{album}]'.format(**track_meta))
-        self.lastfm.scrobble(timestamp=int(time.time()), **track_meta)
+
+        for scrobbler in self.scrobblers:
+            scrobbler.scrobble(timestamp=int(time.time()), **track_meta)
+
         self.last_scrobbled = track_meta
 
 
@@ -155,7 +170,10 @@ def load_config(path):
 
 
 def config_wizard():
-    click.echo('''
+    config = {'chromecast': {}}
+
+    if click.confirm('Set up last.fm account?', default=True):
+        click.echo('''
 You'll need to create a last.fm API application first. Do so here:
 
     http://www.last.fm/api/account/create
@@ -164,13 +182,43 @@ What you fill in doesn't matter at all, just make sure to save the API
 Key and Shared Secret.
 ''')
 
-    config = {
-        'lastfm': {
-            key: click.prompt(key, type=str)
-            for key in ['user_name', 'password', 'api_key', 'api_secret']
-        },
-        'chromecast': {}
-    }
+
+        config['lastfm'] = {
+            key: click.prompt(key, type=str, hide_input=hidden)
+            for (key, hidden) in [
+                    ('user_name', False),
+                    ('password', True),
+                    ('api_key', False),
+                    ('api_secret', True)
+            ]
+        }
+
+    if click.confirm('Set up Libre.fm account?'):
+        libre_conf = {
+            key: click.prompt(key, type=str, hide_input=hidden)
+            for (key, hidden) in [
+                    ('user_name', False),
+                    ('password', True)
+            ]
+        }
+
+        libre = pylast.LibreFMNetwork(
+            username=libre_conf['user_name'],
+            password_hash=pylast.md5(libre_conf['password']))
+
+        skg = pylast.SessionKeyGenerator(libre)
+        url = skg.get_web_auth_url()
+
+        click.echo('''Please grant lastcast access to your Libre.fm account:
+
+        %s
+''' % url)
+
+        click.echo('Hit enter when ready')
+        click.getchar()
+
+        libre_conf['session_key'] = skg.get_web_auth_session_key(url)
+        config['librefm'] = libre_conf
 
     available = [
         cc.device.friendly_name for cc in
@@ -180,7 +228,7 @@ Key and Shared Secret.
     if len(available) == 1:
         config['chromecast']['name'] = available[0]
 
-    if click.confirm('Manually specify cast device?', default=True):
+    if len(available) > 1 or click.confirm('Manually specify cast device?', default=True):
         click.echo('\n\nAvailable cast devices: %s' % ', '.join(available))
 
         config['chromecast']['name'] = click.prompt('Which device should be used?')

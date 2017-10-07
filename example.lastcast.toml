@@ -5,6 +5,12 @@ password = "hunter2"
 api_key = "..."
 api_secret = "..."
 
+[librefm]
+user_name = "foobar"
+password = "hunter2"
+# Run lastcast --wizard to populate this
+session_key = "..."
+
 [chromecast]
 name = "Living Room"
 # (optional) list of chrome cast apps to scrobble from
