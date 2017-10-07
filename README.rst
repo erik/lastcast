@@ -1,7 +1,7 @@
 lastcast
 ========
 
-> Scrobble music playing on Chromecast devices to last.fm and libre.fm
+Scrobble music playing on Chromecast devices to last.fm and libre.fm
 
 Because I was annoyed that Spotify doesn't scrobble to last.fm when
 using Chromecast.
