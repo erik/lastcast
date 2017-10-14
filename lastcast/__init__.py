@@ -143,8 +143,7 @@ class ScrobbleListener(object):
             try:
                 scrobbler.update_now_playing(**track_meta)
             except (pylast.NetworkError, pylast.MalformedResponseError):
-                logging.exception('update_now_playing failed for %s',
-                                  repr(scrobbler))
+                logging.exception('update_now_playing failed for %s', scrobbler.name)
 
         self.last_played = track_meta
 
@@ -160,7 +159,7 @@ class ScrobbleListener(object):
             try:
                 scrobbler.scrobble(timestamp=int(time.time()), **track_meta)
             except (pylast.NetworkError, pylast.MalformedResponseError):
-                logging.exception('scrobble failed for %s', repr(scrobbler))
+                logging.exception('scrobble failed for %s', scrobbler.name)
 
         self.last_scrobbled = track_meta
 
