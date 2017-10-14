@@ -140,7 +140,10 @@ class ScrobbleListener(object):
             return
 
         for scrobbler in self.scrobblers:
-            scrobbler.update_now_playing(**track_meta)
+            try:
+                scrobbler.update_now_playing(**track_meta)
+            except (pylast.NetworkError, pylast.MalformedResponseError):
+                logging.exception('update_now_playing failed for %s', scrobbler.name)
 
         self.last_played = track_meta
 
@@ -153,7 +156,10 @@ class ScrobbleListener(object):
         click.echo(u'Scrobbling: {artist} - {title} [{album}]'.format(**track_meta))
 
         for scrobbler in self.scrobblers:
-            scrobbler.scrobble(timestamp=int(time.time()), **track_meta)
+            try:
+                scrobbler.scrobble(timestamp=int(time.time()), **track_meta)
+            except (pylast.NetworkError, pylast.MalformedResponseError):
+                logging.exception('scrobble failed for %s', scrobbler.name)
 
         self.last_scrobbled = track_meta
 
