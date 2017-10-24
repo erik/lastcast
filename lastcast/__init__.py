@@ -153,6 +153,7 @@ class ScrobbleListener(object):
             self._scrobble(meta)
 
     def _now_playing(self, track_meta):
+        # Only need to update the now playing once for each track
         if track_meta == self.current_track:
             return
 
@@ -164,8 +165,10 @@ class ScrobbleListener(object):
 
         self.current_track = track_meta
 
-        if self.estimate_spotify_timestamp and \
-           self.cast.app_display_name == 'Spotify':
+        # First time this track has been seen, so reset the estimated
+        # current time if we're using the spotify hack
+        if self.cast.app_display_name == 'Spotify' and \
+           self.estimate_spotify_timestamp:
             # Assume the track did not start in sync with the poll interval
             self.current_time = POLL_INTERVAL / 2
 
