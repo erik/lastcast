@@ -102,7 +102,8 @@ class ScrobbleListener(object):
             return
 
         # Triggered when we poll in between songs (see issue #6)
-        if status.current_time is None or not status.duration:
+        if status.current_time is None or status.duration is None or \
+           status.duration <= 0:
             return
 
         # Spotify doesn't reliably report timestamps (see #20, #27),
@@ -163,7 +164,8 @@ class ScrobbleListener(object):
 
         self.current_track = track_meta
 
-        if self.cast.app_display_name == 'Spotify':
+        if self.estimate_spotify_timestamp and \
+           self.cast.app_display_name == 'Spotify':
             # Assume the track did not start in sync with the poll interval
             self.current_time = POLL_INTERVAL / 2
 
