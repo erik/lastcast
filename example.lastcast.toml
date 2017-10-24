@@ -16,5 +16,5 @@ name = "Living Room"
 # (optional) list of chrome cast apps to scrobble from
 app_whitelist = ["Spotify", "Google Play Music"]
 # (optional) estimate the timestamp for tracks on spotify (see issues #20, #27)
-#            defaults to true
+#            this will prevent seeking from working properly. defaults to true
 estimate_spotify_timestamp = true
