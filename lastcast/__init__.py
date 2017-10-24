@@ -20,6 +20,7 @@ APP_WHITELIST = [u'Spotify', u'Google Play Music', u'SoundCloud', u'Plex']
 SCROBBLE_THRESHOLD_PCT = 0.50
 SCROBBLE_THRESHOLD_SECS = 120
 UNSUPPORTED_MODES = [u'MultizoneLeader']
+POLL_INTERVAL = 5.0
 
 
 class ScrobbleListener(object):
@@ -49,7 +50,11 @@ class ScrobbleListener(object):
             ))
 
         self.last_scrobbled = {}
-        self.last_played = {}
+        self.current_track = {}
+        self.current_time = 0
+        self.last_poll = time.time()
+
+        self.estimate_spotify_timestamp = self.cast_config.get('estimate_spotify_timestamp', True)
 
     def listen(self):
         while True:
@@ -58,7 +63,7 @@ class ScrobbleListener(object):
                     self._connect_chromecast(self.cast_config)
                 else:
                     self.poll()
-                    time.sleep(5)
+                    time.sleep(POLL_INTERVAL)
 
             # This could happen due to network hiccups, Chromecast
             # restarting, race conditions, etc...
@@ -74,8 +79,12 @@ class ScrobbleListener(object):
     def poll(self):
         self.cast.media_controller.block_until_active()
 
+        last_poll, self.last_poll = (self.last_poll, time.time())
+
+        current_app = self.cast.app_display_name
+
         # Only certain applications make sense to scrobble.
-        if self.cast.app_display_name not in self.app_whitelist:
+        if current_app not in self.app_whitelist:
             return
 
         # Certain operating modes do not support the
@@ -93,8 +102,15 @@ class ScrobbleListener(object):
             return
 
         # Triggered when we poll in between songs (see issue #6)
-        if not status.current_time or not status.duration:
+        if status.current_time is None or not status.duration:
             return
+
+        # Spotify doesn't reliably report timestamps (see #20, #27),
+        # so we estimate the current time as best we can
+        if self.estimate_spotify_timestamp and current_app == 'Spotify':
+            self.current_time += time.time() - last_poll
+        else:
+            self.current_time = status.current_time
 
         self._on_status(status)
 
@@ -131,12 +147,12 @@ class ScrobbleListener(object):
 
         # Only scrobble if track has played 50% through (or 120 seconds,
         # whichever comes first).
-        if status.current_time > SCROBBLE_THRESHOLD_SECS or \
-           (status.current_time / status.duration) >= SCROBBLE_THRESHOLD_PCT:
+        if self.current_time > SCROBBLE_THRESHOLD_SECS or \
+           (self.current_time / status.duration) >= SCROBBLE_THRESHOLD_PCT:
             self._scrobble(meta)
 
     def _now_playing(self, track_meta):
-        if track_meta == self.last_played:
+        if track_meta == self.current_track:
             return
 
         for scrobbler in self.scrobblers:
@@ -145,7 +161,11 @@ class ScrobbleListener(object):
             except (pylast.NetworkError, pylast.MalformedResponseError):
                 logging.exception('update_now_playing failed for %s', scrobbler.name)
 
-        self.last_played = track_meta
+        self.current_track = track_meta
+
+        if self.cast.app_display_name == 'Spotify':
+            # Assume the track did not start in sync with the poll interval
+            self.current_time = POLL_INTERVAL / 2
 
     def _scrobble(self, track_meta):
         # Don't scrobble the same thing over and over
@@ -187,7 +207,6 @@ You'll need to create a last.fm API application first. Do so here:
 What you fill in doesn't matter at all, just make sure to save the API
 Key and Shared Secret.
 ''')
-
 
         config['lastfm'] = {
             key: click.prompt(key, type=str, hide_input=hidden)
