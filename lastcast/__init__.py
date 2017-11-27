@@ -261,18 +261,20 @@ Key and Shared Secret.
     ]
 
     if len(available) == 1:
-        config['chromecast']['name'] = available[0]
+        config['chromecast']['devices'] = [available[0]]
 
     if len(available) > 1 or click.confirm('Manually specify cast device?', default=True):
         click.echo('\n\nAvailable cast devices: %s' % ', '.join(available))
+        device_names = click.prompt('Which device(s) should be used? (comma separated)')
+        device_names = [d.strip() for d in device_names.split(',') if d.strip != '']
 
-        config['chromecast']['name'] = click.prompt('Which device should be used?')
+        config['chromecast']['devices'] = device_names
 
     click.echo('\n\nDefault chromecast apps to scrobble from: %s' %
                ', '.join(APP_WHITELIST))
 
     apps = click.prompt('Comma separated apps [blank for default]')
-    apps = [app.strip() for app in apps.split(',') if app.strip() != ""]
+    apps = [app.strip() for app in apps.split(',') if app.strip() != '']
 
     if apps:
         config['chromecast']['app_whitelist'] = apps
