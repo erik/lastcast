@@ -129,8 +129,9 @@ class ScrobbleListener(object):
         ]
 
         if not matching_devices:
+            names = [d.device.friendly_name for d in available_devices]
             click.echo('Could not connect to device %s\n'
-                       'Available devices: %s ' % (self.cast_name, ', '.join(available_devices)))
+                       'Available devices: %s ' % (self.cast_name, ', '.join(names)))
             return
 
         if len(matching_devices) > 1:
