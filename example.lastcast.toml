@@ -12,7 +12,8 @@ password = "hunter2"
 session_key = "..."
 
 [chromecast]
-name = "Living Room"
+# chromecast devices to listen to, this can also include group names.
+devices = ["Living Room", "My Group"]
 # (optional) list of chrome cast apps to scrobble from
 app_whitelist = ["Spotify", "Google Play Music"]
 # (optional) estimate the timestamp for tracks on spotify (see issues #20, #27)
