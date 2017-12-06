@@ -219,10 +219,13 @@ def load_config(path):
 
     config = toml.load(path)
 
-    assert 'lastfm' in config, 'Missing lastfm config block'
+    if 'lastfm' in config:
+        for k in ['api_key', 'api_secret', 'user_name', 'password']:
+            assert k in config['lastfm'], 'Missing required lastfm option: %s' % k
 
-    for k in ['api_key', 'api_secret', 'user_name', 'password']:
-        assert k in config['lastfm'], 'Missing required lastfm option: %s' % k
+    if 'librefm' in config:
+        for k in ['password', 'user_name', 'session_key']:
+            assert k in config['librefm'], 'Missing required librefm option: %s' % k
 
     return config
 
