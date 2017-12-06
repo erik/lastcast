@@ -23,6 +23,10 @@ UNSUPPORTED_MODES = {'MultizoneLeader'}
 POLL_INTERVAL = 5.0
 
 
+class ChromecastNotFoundException(Exception):
+    pass
+
+
 class ScrobbleListener(object):
     '''
     Tracks state of media playing on a single Chromecast device and
@@ -36,9 +40,8 @@ class ScrobbleListener(object):
 
         self._connect_chromecast(available_devices)
 
-        if not self.cast:
-            click.echo('Failed to connect! Exiting')
-            sys.exit(1)
+        if not self.cast and not self.cast_config.get('retry_missing', False):
+            raise ChromecastNotFoundException()
 
         self.scrobblers = []
 
@@ -339,10 +342,14 @@ def main(config, wizard):
         sys.exit(1)
 
     available = pychromecast.get_chromecasts()
-    listeners = [
-        ScrobbleListener(config, name, available_devices=available)
-        for name in device_names
-    ]
+    listeners = []
+
+    for name in device_names:
+        try:
+            listeners.append(ScrobbleListener(config, name, available_devices=available))
+        except ChromecastNotFoundException:
+            click.echo('Failed to connect to "%s". Exiting' % name)
+            sys.exit(1)
 
     while True:
         for listener in listeners:
