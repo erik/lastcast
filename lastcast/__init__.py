@@ -180,8 +180,8 @@ class ScrobbleListener(object):
         #
         # Don't scrobble the same thing over and over
         if meta != self.last_scrobbled and \
-           self.current_time > SCROBBLE_THRESHOLD_SECS or \
-           (self.current_time / status.duration) >= SCROBBLE_THRESHOLD_PCT:
+           (self.current_time > SCROBBLE_THRESHOLD_SECS or \
+            (self.current_time / status.duration) >= SCROBBLE_THRESHOLD_PCT):
             self._log_scrobble(meta)
 
     def _log_now_playing(self, track_meta):
