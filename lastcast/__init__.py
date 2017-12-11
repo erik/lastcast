@@ -1,3 +1,4 @@
+import itertools
 import logging
 import os.path
 import sys
@@ -21,6 +22,7 @@ SCROBBLE_THRESHOLD_PCT = 0.50
 SCROBBLE_THRESHOLD_SECS = 120
 UNSUPPORTED_MODES = {'MultizoneLeader'}
 POLL_INTERVAL = 5.0
+RECONNECT_INTERVAL = 15
 
 
 class ChromecastNotFoundException(Exception):
@@ -38,9 +40,14 @@ class ScrobbleListener(object):
         self.cast_config = config.get('chromecast', {})
         self.app_whitelist = self.cast_config.get('app_whitelist', APP_WHITELIST)
 
+        self.last_scrobbled = {}
+        self.current_track = {}
+        self.current_time = 0
+        self.last_poll = time.time()
+
         self._connect_chromecast(available_devices)
 
-        if not self.cast and not self.cast_config.get('retry_missing', False):
+        if not self.cast:
             raise ChromecastNotFoundException()
 
         self.scrobblers = []
@@ -59,19 +66,14 @@ class ScrobbleListener(object):
                 password_hash=pylast.md5(config['librefm']['password'])
             ))
 
-        self.last_scrobbled = {}
-        self.current_track = {}
-        self.current_time = 0
-        self.last_poll = time.time()
-
         self.estimate_spotify_timestamp = self.cast_config.get(
             'estimate_spotify_timestamp', True)
 
     def poll(self):
         ''' Helper for `_poll` to handle errors and reconnects. '''
-
         try:
             if not self.cast:
+                click.echo('Reconnecting to cast device `%s`...' % self.cast_name)
                 self._connect_chromecast()
             else:
                 self._poll()
@@ -80,8 +82,6 @@ class ScrobbleListener(object):
         # restarting, race conditions, etc...
         except (PyChromecastError, pylast.NetworkError):
             traceback.print_exc()
-
-            click.echo('Reconnecting to cast device `%s`...' % self.cast_name)
             self.cast = None
 
     def _poll(self):
@@ -145,12 +145,7 @@ class ScrobbleListener(object):
         ]
 
         if not matching_devices:
-            names = ','.join([
-                d.device.friendly_name
-                for d in available_devices
-            ])
-            click.echo('Could not connect to device %s\n'
-                       'Available devices: %s ' % (self.cast_name, names))
+            click.echo('Could not connect to device "%s"' % self.cast_name)
             return
 
         if len(matching_devices) > 1:
@@ -314,6 +309,24 @@ Key and Shared Secret.
             fp.write(generated)
 
 
+def connect_to_devices(config, device_names, available):
+    '''
+    Attempt to connect to each named device, returning
+    ScrobbleListners and names of devices that couldn't be found.
+    '''
+
+    listeners = []
+    missing_devices = []
+
+    for name in device_names:
+        try:
+            listeners.append(ScrobbleListener(config, name, available_devices=available))
+        except ChromecastNotFoundException:
+            missing_devices.append(name)
+
+    return listeners, missing_devices
+
+
 @click.command()
 @click.option('--config', required=False, help='Config file location')
 @click.option('--wizard', is_flag=True, help='Generate a lastcast config.')
@@ -345,18 +358,27 @@ def main(config, wizard):
         sys.exit(1)
 
     available = pychromecast.get_chromecasts()
-    listeners = []
+    listeners, missing = connect_to_devices(config, device_names, available)
 
-    for name in device_names:
-        try:
-            listeners.append(ScrobbleListener(config, name, available_devices=available))
-        except ChromecastNotFoundException:
-            click.echo('Failed to connect to "%s". Exiting' % name)
+    retry_missing = cast_config.get('retry_missing', False)
+
+    if missing != [] and not retry_missing:
+            click.echo('Failed to connect to %s. Exiting' % ', '.join(missing))
+            click.echo('Available devices: %s' % ', '.join([
+                d.device.friendly_name for d in available
+            ]))
             sys.exit(1)
 
-    while True:
+    for i in itertools.count():
         for listener in listeners:
             listener.poll()
+
+        if retry_missing and missing and i % RECONNECT_INTERVAL == 0:
+            click.echo('retrying missing devices!')
+            available = pychromecast.get_chromecasts()
+
+            devices, missing = connect_to_devices(config, missing, available)
+            listeners.extend(devices)
 
         time.sleep(POLL_INTERVAL)
 
