@@ -137,7 +137,7 @@ class ScrobbleListener(object):
         self.cast = None
 
         if not available_devices:
-            available_devices = pychromecast.get_chromecasts(tries=1, retry_wait=0)
+            available_devices = pychromecast.get_chromecasts(tries=1, retry_wait=0.01)
 
         matching_devices = [
             c for c in available_devices
@@ -376,7 +376,7 @@ def main(config, wizard):
         # If we have any devices missing, periodically try to connect to them
         if retry_missing and missing and i % RECONNECT_INTERVAL == 0:
             click.echo('retrying missing devices!')
-            available = pychromecast.get_chromecasts(tries=1, retry_wait=0)
+            available = pychromecast.get_chromecasts(tries=1, retry_wait=0.01)
 
             new_devices, missing = connect_to_devices(config, missing, available)
             listeners.extend(new_devices)
