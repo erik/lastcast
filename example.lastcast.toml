@@ -19,7 +19,12 @@ app_whitelist = ["Spotify", "Google Play Music"]
 # (optional) estimate the timestamp for tracks on spotify (see issues #20, #27)
 #            this will prevent seeking from working properly. defaults to true
 estimate_spotify_timestamp = true
+# (optional) ignore devices that aren't found during startup. Defaults to false.
+ignore_missing = false
 # (optional) don't fail when a device isn't found, continue to retry
 #            connecting to it. Useful if one or more of the devices are
 #            not always on. Defaults to false.
+#
+# NOTE: This flag is potentially buggy and may cause lastcast to hang on
+#       particularly volatile networks. Please report any bugs.
 retry_missing = false
