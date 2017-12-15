@@ -1,3 +1,4 @@
+import itertools
 import logging
 import os.path
 import sys
@@ -21,19 +22,33 @@ SCROBBLE_THRESHOLD_PCT = 0.50
 SCROBBLE_THRESHOLD_SECS = 120
 UNSUPPORTED_MODES = {'MultizoneLeader'}
 POLL_INTERVAL = 5.0
+RECONNECT_INTERVAL = 15
+
+
+class ChromecastNotFoundException(Exception):
+    pass
 
 
 class ScrobbleListener(object):
+    '''
+    Tracks state of media playing on a single Chromecast device and
+    logs to {last,libre}.fm when scrobble threshholds are hit
+    '''
+
     def __init__(self, config, cast_name, available_devices=None):
         self.cast_name = cast_name
         self.cast_config = config.get('chromecast', {})
         self.app_whitelist = self.cast_config.get('app_whitelist', APP_WHITELIST)
 
+        self.last_scrobbled = {}
+        self.current_track = {}
+        self.current_time = 0
+        self.last_poll = time.time()
+
         self._connect_chromecast(available_devices)
 
         if not self.cast:
-            click.echo('Failed to connect! Exiting')
-            sys.exit(1)
+            raise ChromecastNotFoundException()
 
         self.scrobblers = []
 
@@ -51,16 +66,14 @@ class ScrobbleListener(object):
                 password_hash=pylast.md5(config['librefm']['password'])
             ))
 
-        self.last_scrobbled = {}
-        self.current_track = {}
-        self.current_time = 0
-        self.last_poll = time.time()
-
-        self.estimate_spotify_timestamp = self.cast_config.get('estimate_spotify_timestamp', True)
+        self.estimate_spotify_timestamp = self.cast_config.get(
+            'estimate_spotify_timestamp', True)
 
     def poll(self):
+        ''' Helper for `_poll` to handle errors and reconnects. '''
         try:
             if not self.cast:
+                click.echo('Reconnecting to cast device `%s`...' % self.cast_name)
                 self._connect_chromecast()
             else:
                 self._poll()
@@ -69,11 +82,11 @@ class ScrobbleListener(object):
         # restarting, race conditions, etc...
         except (PyChromecastError, pylast.NetworkError):
             traceback.print_exc()
-
-            click.echo('Reconnecting to cast device `%s`...' % self.cast_name)
             self.cast = None
 
     def _poll(self):
+        ''' Updates internal media state, can trigger scrobble. '''
+
         current_app = self.cast.app_display_name
 
         # Only certain applications make sense to scrobble.
@@ -115,13 +128,16 @@ class ScrobbleListener(object):
         else:
             self.current_time = status.current_time
 
-        self._on_status(status)
+        # We know music is playing, want to check what to update
+        self._on_media_controller_status(status)
 
     def _connect_chromecast(self, available_devices=None):
+        ''' Attempt to (re)connect to cast device named in `__init__`. '''
+
         self.cast = None
 
         if not available_devices:
-            available_devices = pychromecast.get_chromecasts()
+            available_devices = pychromecast.get_chromecasts(tries=1, retry_wait=0.01)
 
         matching_devices = [
             c for c in available_devices
@@ -129,13 +145,11 @@ class ScrobbleListener(object):
         ]
 
         if not matching_devices:
-            names = [d.device.friendly_name for d in available_devices]
-            click.echo('Could not connect to device %s\n'
-                       'Available devices: %s ' % (self.cast_name, ', '.join(names)))
+            click.echo('Could not connect to device "%s"' % self.cast_name)
             return
 
         if len(matching_devices) > 1:
-            click.echo('WARNING: Multiple chromecasts available. Choosing first.')
+            click.echo('WARNING: Multiple devices available. Choosing first.')
 
         self.cast = matching_devices[0]
 
@@ -143,33 +157,36 @@ class ScrobbleListener(object):
         self.cast.wait()
         click.echo('Using chromecast: %s' % self.cast.device.friendly_name)
 
-    def _on_status(self, status):
+    def _on_media_controller_status(self, status):
+        ''' Handle a status object returned from MediaController '''
         meta = {
             'artist': status.artist if status.artist else status.album_artist,
             'album': status.album_name,
             'title': status.title,
         }
 
-        self._now_playing(meta)
+        # Only need to update the now playing once for each track
+        if meta != self.current_track:
+            self._log_now_playing(meta)
+            self.current_track = meta
 
         # Only scrobble if track has played 50% through (or 120 seconds,
         # whichever comes first).
-        if self.current_time > SCROBBLE_THRESHOLD_SECS or \
-           (self.current_time / status.duration) >= SCROBBLE_THRESHOLD_PCT:
-            self._scrobble(meta)
+        #
+        # Don't scrobble the same thing over and over
+        if meta != self.last_scrobbled and \
+           (self.current_time > SCROBBLE_THRESHOLD_SECS or \
+            (self.current_time / status.duration) >= SCROBBLE_THRESHOLD_PCT):
+            self._log_scrobble(meta)
 
-    def _now_playing(self, track_meta):
-        # Only need to update the now playing once for each track
-        if track_meta == self.current_track:
-            return
+    def _log_now_playing(self, track_meta):
+        ''' Update the "now playing" track on user's profile. '''
 
         for scrobbler in self.scrobblers:
             try:
                 scrobbler.update_now_playing(**track_meta)
             except (pylast.NetworkError, pylast.MalformedResponseError):
                 logging.exception('update_now_playing failed for %s', scrobbler.name)
-
-        self.current_track = track_meta
 
         # First time this track has been seen, so reset the estimated
         # current time if we're using the spotify hack
@@ -178,11 +195,8 @@ class ScrobbleListener(object):
             # Assume the track did not start in sync with the poll interval
             self.current_time = POLL_INTERVAL / 2
 
-    def _scrobble(self, track_meta):
-        # Don't scrobble the same thing over and over
-        # FIXME: some bizarre people like putting songs on repeat
-        if track_meta == self.last_scrobbled:
-            return
+    def _log_scrobble(self, track_meta):
+        ''' Scrobble current track to user's profile. '''
 
         click.echo(u'Scrobbling: {artist} - {title} [{album}]'.format(**track_meta))
 
@@ -196,17 +210,24 @@ class ScrobbleListener(object):
 
 
 def load_config(path):
+    ''' Parse config at given absolute path and check for required keys. '''
+
     config = toml.load(path)
 
-    assert 'lastfm' in config, 'Missing lastfm config block'
+    if 'lastfm' in config:
+        for k in ['api_key', 'api_secret', 'user_name', 'password']:
+            assert k in config['lastfm'], 'Missing required lastfm option: %s' % k
 
-    for k in ['api_key', 'api_secret', 'user_name', 'password']:
-        assert k in config['lastfm'], 'Missing required lastfm option: %s' % k
+    if 'librefm' in config:
+        for k in ['password', 'user_name', 'session_key']:
+            assert k in config['librefm'], 'Missing required librefm option: %s' % k
 
     return config
 
 
 def config_wizard():
+    ''' Text User Interface to generate initial lastcast.toml config. '''
+
     config = {'chromecast': {}}
 
     if click.confirm('Set up last.fm account?', default=True):
@@ -288,6 +309,24 @@ Key and Shared Secret.
             fp.write(generated)
 
 
+def connect_to_devices(config, device_names, available):
+    '''
+    Attempt to connect to each named device, returning
+    ScrobbleListners and names of devices that couldn't be found.
+    '''
+
+    listeners = []
+    missing_devices = []
+
+    for name in device_names:
+        try:
+            listeners.append(ScrobbleListener(config, name, available_devices=available))
+        except ChromecastNotFoundException:
+            missing_devices.append(name)
+
+    return listeners, missing_devices
+
+
 @click.command()
 @click.option('--config', required=False, help='Config file location')
 @click.option('--wizard', is_flag=True, help='Generate a lastcast config.')
@@ -319,14 +358,31 @@ def main(config, wizard):
         sys.exit(1)
 
     available = pychromecast.get_chromecasts()
-    listeners = [
-        ScrobbleListener(config, name, available_devices=available)
-        for name in device_names
-    ]
+    listeners, missing = connect_to_devices(config, device_names, available)
 
-    while True:
+    retry_missing = cast_config.get('retry_missing', False)
+    if cast_config.get('ignore_missing', False):
+        click.echo('Continuing without missing devices: %s' % ', '.join(missing))
+        missing = []
+
+    if missing and not retry_missing:
+            click.echo('Failed to connect to %s. Exiting' % ', '.join(missing))
+            click.echo('Available devices: %s' % ', '.join([
+                d.device.friendly_name for d in available
+            ]))
+            sys.exit(1)
+
+    for i in itertools.count():
         for listener in listeners:
             listener.poll()
+
+        # If we have any devices missing, periodically try to connect to them
+        if retry_missing and missing and i % RECONNECT_INTERVAL == 0:
+            click.echo('Retrying missing devices: %s' % ', '.join(missing))
+            available = pychromecast.get_chromecasts(tries=1, retry_wait=0.01)
+
+            new_devices, missing = connect_to_devices(config, missing, available)
+            listeners.extend(new_devices)
 
         time.sleep(POLL_INTERVAL)
 
