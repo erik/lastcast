@@ -378,7 +378,7 @@ def main(config, wizard):
 
         # If we have any devices missing, periodically try to connect to them
         if retry_missing and missing and i % RECONNECT_INTERVAL == 0:
-            click.echo('retrying missing devices!')
+            click.echo('Retrying missing devices: %s' % ', '.join(missing))
             available = pychromecast.get_chromecasts(tries=1, retry_wait=0.01)
 
             new_devices, missing = connect_to_devices(config, missing, available)
