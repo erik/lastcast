@@ -117,6 +117,12 @@ class ScrobbleListener(object):
         if status.current_time is None or status.duration is None or \
            status.duration <= 0:
             return
+        
+        # Triggered when song is repeated and starting again after the first time
+        if status.duration <= self.current_time:
+            self.last_scrobbled = {}
+            self.current_time = 0
+            return
 
         # Spotify doesn't reliably report timestamps (see #20, #27),
         # so we estimate the current time as best we can
