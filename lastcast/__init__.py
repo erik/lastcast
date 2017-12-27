@@ -122,8 +122,8 @@ class ScrobbleListener(object):
         # time
         if status.duration < self.current_time:
             self.last_scrobbled = {}
+            self.current_track = {}
             self.current_time = 0
-            return
 
         # Spotify doesn't reliably report timestamps (see #20, #27),
         # so we estimate the current time as best we can
