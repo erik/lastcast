@@ -1,25 +1,28 @@
 lastcast
 ========
 
-Scrobble music playing on Chromecast devices to last.fm and libre.fm
+Scrobble music playing on Chromecast devices to last.fm and libre.fm.
 
-Because I was annoyed that Spotify doesn't scrobble to last.fm when
-using Chromecast.
+By default, lastcast will scrobble music playing on Spotify,
+Google Play Music, SoundCloud, and Plex, but can be configured to
+scrobble any media player that supports Chromecast.
 
-By default, lastcast will scrobble tracks playing on Spotify,
-Google Play Music, SoundCloud, and Plex, but this can be changed
-in the config.
+Getting started
+---------------
 
 ``pip install lastcast``
 
-To setup a configuration for lastcast, either modify
-``example.lastcast.toml`` as necessary and write it to
-``~/.lastcast.toml``, or use the config creation tool:
+Set up an initial configuration with the configuration
+creation tool:
 
 ``lastcast --wizard``
 
-Once the configuration file is in place, run ``lastcast`` to connect to
-the Chromecast and start scrobbling.
+If you'd prefer to set up the configuration manually, modify
+``example.lastcast.toml`` from the repo and save it to
+``~/.lastcast.toml``.
+
+Once the configuration file is in place, just run ``lastcast`` to connect to
+the Chromecast and start scrobbling!
 
 Detailed macOS setup
 --------------------
