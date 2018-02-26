@@ -16,7 +16,7 @@ from pychromecast.error import PyChromecastError
 logging.basicConfig()
 
 # Default set of apps to scrobble from.
-APP_WHITELIST = [u'Spotify', u'Google Play Music', u'SoundCloud', u'Plex']
+APP_WHITELIST = ['Spotify', 'Google Play Music', 'SoundCloud', 'Plex']
 
 SCROBBLE_THRESHOLD_PCT = 0.50
 SCROBBLE_THRESHOLD_SECS = 120
@@ -144,7 +144,7 @@ class ScrobbleListener(object):
         self.cast = None
 
         if not available_devices:
-            available_devices = pychromecast.get_chromecasts(tries=1, retry_wait=0.01)
+            available_devices = pychromecast.get_chromecasts(tries=1)
 
         matching_devices = [
             c for c in available_devices
@@ -181,9 +181,10 @@ class ScrobbleListener(object):
         # whichever comes first).
         #
         # Don't scrobble the same thing over and over
-        if meta != self.last_scrobbled and \
-           (self.current_time > SCROBBLE_THRESHOLD_SECS or \
-            (self.current_time / status.duration) >= SCROBBLE_THRESHOLD_PCT):
+        hit_threshold = self.current_time > SCROBBLE_THRESHOLD_SECS or \
+            (self.current_time / status.duration) >= SCROBBLE_THRESHOLD_PCT
+
+        if meta != self.last_scrobbled and hit_threshold:
             self._log_scrobble(meta)
 
     def _log_now_playing(self, track_meta):
@@ -205,7 +206,7 @@ class ScrobbleListener(object):
     def _log_scrobble(self, track_meta):
         ''' Scrobble current track to user's profile. '''
 
-        click.echo(u'Scrobbling: {artist} - {title} [{album}]'.format(**track_meta))
+        click.echo('Scrobbling: {artist} - {title} [{album}]'.format(**track_meta))
 
         for scrobbler in self.scrobblers:
             try:
@@ -386,7 +387,7 @@ def main(config, wizard):
         # If we have any devices missing, periodically try to connect to them
         if retry_missing and missing and i % RECONNECT_INTERVAL == 0:
             click.echo('Retrying missing devices: %s' % ', '.join(missing))
-            available = pychromecast.get_chromecasts(tries=1, retry_wait=0.01)
+            available = pychromecast.get_chromecasts(tries=1)
 
             new_devices, missing = connect_to_devices(config, missing, available)
             listeners.extend(new_devices)
