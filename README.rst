@@ -9,7 +9,7 @@ scrobble any media player that supports Chromecast.
 
 **Python 2 is no longer supported as of lastcast 1.0.0.**
 
-If you need Python 2, please install ``lastcast < 1.0.0``.
+If you need Python 2, please install ``lastcast==0.7.0``.
 
 Getting started
 ---------------
