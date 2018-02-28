@@ -14,7 +14,7 @@ If you need Python 2, please install ``lastcast==0.7.0``.
 Getting started
 ---------------
 
-``pip install lastcast``
+``pip3 install lastcast``
 
 Set up an initial configuration with the configuration
 creation tool:
@@ -35,8 +35,8 @@ Detailed macOS setup
 
 Enter the following commands in your Terminal (Terminal.app, iTerm2, etc.):
 
-1. ``sudo easy_install pip``
-2. ``sudo pip install --upgrade lastcast --ignore-installed six``
+1. ``brew install python3``
+2. ``sudo pip3 install --upgrade lastcast``
 3. ``lastcast --wizard``
 
 This will prompt you to create a last.fm API application and then ask for your
@@ -48,14 +48,10 @@ install xcode by running ``xcode-select --install`` and retry step 2.
 Now everything should be set up. When you want to start scrobbling, simply
 run ``lastcast`` in the terminal.
 
-Generally, I run lastcast like so: ``while true; do lastcast; sleep 5; done``.
-This will help in case lastcast crashes for whatever reason (please
-open an issue if you see something go wrong!)
-
 Linux / systemd instructions
 ----------------------------
 
-1. ``sudo pip install --upgrade lastcast``
+1. ``sudo pip3 install --upgrade lastcast``
 2. ``lastcast --wizard``
 3. Edit the code block below as needed (remember to fill in the config path!)
    and write to ``/usr/lib/systemd/system/lastcast.service``
