@@ -7,10 +7,14 @@ By default, lastcast will scrobble music playing on Spotify,
 Google Play Music, SoundCloud, and Plex, but can be configured to
 scrobble any media player that supports Chromecast.
 
+**Python 2 is no longer supported as of lastcast 1.0.0.**
+
+If you need Python 2, please install ``lastcast==0.7.0``.
+
 Getting started
 ---------------
 
-``pip install lastcast``
+``pip3 install lastcast``
 
 Set up an initial configuration with the configuration
 creation tool:
@@ -24,34 +28,10 @@ If you'd prefer to set up the configuration manually, modify
 Once the configuration file is in place, just run ``lastcast`` to connect to
 the Chromecast and start scrobbling!
 
-Detailed macOS setup
---------------------
-
-(for anyone not familiar with Python and pip)
-
-Enter the following commands in your Terminal (Terminal.app, iTerm2, etc.):
-
-1. ``sudo easy_install pip``
-2. ``sudo pip install --upgrade lastcast --ignore-installed six``
-3. ``lastcast --wizard``
-
-This will prompt you to create a last.fm API application and then ask for your
-login information, which will only be stored locally on your computer.
-
-You may get an error on step 2 about ``cc`` missing. If this is the case,
-install xcode by running ``xcode-select --install`` and retry step 2.
-
-Now everything should be set up. When you want to start scrobbling, simply
-run ``lastcast`` in the terminal.
-
-Generally, I run lastcast like so: ``while true; do lastcast; sleep 5; done``.
-This will help in case lastcast crashes for whatever reason (please open an issue
-if you see something go wrong!)
-
 Linux / systemd instructions
 ----------------------------
 
-1. ``sudo pip install --upgrade lastcast``
+1. ``sudo pip3 install --upgrade lastcast``
 2. ``lastcast --wizard``
 3. Edit the code block below as needed (remember to fill in the config path!)
    and write to ``/usr/lib/systemd/system/lastcast.service``
@@ -73,6 +53,26 @@ Linux / systemd instructions
    [Install]
    WantedBy=network-online.target
 
+
+Detailed macOS setup
+--------------------
+
+(for anyone not familiar with Python and pip)
+
+Enter the following commands in your Terminal (Terminal.app, iTerm2, etc.):
+
+1. ``brew install python3``
+2. ``sudo pip3 install --upgrade lastcast``
+3. ``lastcast --wizard``
+
+This will prompt you to create a last.fm API application and then ask for your
+login information, which will only be stored locally on your computer.
+
+You may get an error on step 2 about ``cc`` missing. If this is the case,
+install xcode by running ``xcode-select --install`` and retry step 2.
+
+Now everything should be set up. When you want to start scrobbling, simply
+run ``lastcast`` in the terminal.
 
 No Chromecast devices found?
 ----------------------------
