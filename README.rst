@@ -7,7 +7,7 @@ By default, lastcast will scrobble music playing on Spotify,
 Google Play Music, SoundCloud, and Plex, but can be configured to
 scrobble any media player that supports Chromecast.
 
-**Python 2 is no longer supported as of lastcast 1.0.0.**
+**Python 3.4 and earlier are no longer supported as of lastcast 1.0.0.**
 
 If you need Python 2, please install ``lastcast==0.7.0``.
 
