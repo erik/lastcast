@@ -81,7 +81,7 @@ class ScrobbleListener(object):
         # This could happen due to network hiccups, Chromecast
         # restarting, race conditions, etc...
         except (PyChromecastError, pylast.NetworkError):
-            traceback.print_exc()
+            logging.info('poll(%s) failed', self.cast_name, exc_info=True)
             self.cast = None
 
     def _poll(self):
@@ -193,8 +193,12 @@ class ScrobbleListener(object):
         for scrobbler in self.scrobblers:
             try:
                 scrobbler.update_now_playing(**track_meta)
-            except (pylast.NetworkError, pylast.MalformedResponseError):
-                logging.exception('update_now_playing failed for %s', scrobbler.name)
+            except (pylast.NetworkError, pylast.MalformedResponseError) as exc:
+                click.echo('Failed to update now playing for {}: {}'.format(
+                    scrobbler.name, str(exc)))
+
+                logging.info('_log_now_playing(%s) failed', scrobbler.name,
+                             exc_info=True)
 
         # First time this track has been seen, so reset the estimated
         # current time if we're using the spotify hack
@@ -211,8 +215,12 @@ class ScrobbleListener(object):
         for scrobbler in self.scrobblers:
             try:
                 scrobbler.scrobble(timestamp=int(time.time()), **track_meta)
-            except (pylast.NetworkError, pylast.MalformedResponseError):
-                logging.exception('scrobble failed for %s', scrobbler.name)
+            except (pylast.NetworkError, pylast.MalformedResponseError) as exc:
+                click.echo('Failed to scrobble to {}: {}'.format(
+                    scrobbler.name, str(exc)))
+
+                logging.info('_log_scrobble(%s) failed', scrobbler.name,
+                             exc_info=True)
 
         self.last_scrobbled = track_meta
 
@@ -338,7 +346,11 @@ def connect_to_devices(config, device_names, available):
 @click.command()
 @click.option('--config', required=False, help='Config file location')
 @click.option('--wizard', is_flag=True, help='Generate a lastcast config.')
-def main(config, wizard):
+@click.option('--verbose', is_flag=True, help='Enable debug logging.')
+def main(config, wizard, verbose):
+    if verbose:
+        logging.basicConfig(level='DEBUG')
+
     if wizard:
         return config_wizard()
 
