@@ -311,7 +311,8 @@ Key and Shared Secret.
     click.echo('\n\nDefault chromecast apps to scrobble from: %s' %
                ', '.join(APP_WHITELIST))
 
-    apps = click.prompt('Comma separated apps [blank for default]')
+    apps = click.prompt('Comma separated apps [blank for default]',
+                        default='', show_default=False)
     apps = [app.strip() for app in apps.split(',') if app.strip() != '']
 
     if apps:
