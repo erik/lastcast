@@ -13,8 +13,6 @@ import toml
 from pychromecast.error import PyChromecastError
 
 
-logging.basicConfig()
-
 # Default set of apps to scrobble from.
 APP_WHITELIST = ['Spotify', 'Google Play Music', 'SoundCloud', 'Plex']
 
