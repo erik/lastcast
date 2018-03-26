@@ -3,7 +3,6 @@ import logging
 import os.path
 import sys
 import time
-import traceback
 
 import click
 import pylast
@@ -12,6 +11,8 @@ import toml
 
 from pychromecast.error import PyChromecastError
 
+
+logger = logging.getLogger(__name__)
 
 # Default set of apps to scrobble from.
 APP_WHITELIST = ['Spotify', 'Google Play Music', 'SoundCloud', 'Plex']
@@ -79,7 +80,7 @@ class ScrobbleListener(object):
         # This could happen due to network hiccups, Chromecast
         # restarting, race conditions, etc...
         except (PyChromecastError, pylast.NetworkError):
-            logging.info('poll(%s) failed', self.cast_name, exc_info=True)
+            logger.info('poll(%s) failed', self.cast_name, exc_info=True)
             self.cast = None
 
     def _poll(self):
@@ -195,8 +196,8 @@ class ScrobbleListener(object):
                 click.echo('Failed to update now playing for {}: {}'.format(
                     scrobbler.name, str(exc)))
 
-                logging.info('_log_now_playing(%s) failed', scrobbler.name,
-                             exc_info=True)
+                logger.info('_log_now_playing(%s) failed', scrobbler.name,
+                            exc_info=True)
 
         # First time this track has been seen, so reset the estimated
         # current time if we're using the spotify hack
@@ -217,8 +218,8 @@ class ScrobbleListener(object):
                 click.echo('Failed to scrobble to {}: {}'.format(
                     scrobbler.name, str(exc)))
 
-                logging.info('_log_scrobble(%s) failed', scrobbler.name,
-                             exc_info=True)
+                logger.info('_log_scrobble(%s) failed', scrobbler.name,
+                            exc_info=True)
 
         self.last_scrobbled = track_meta
 
@@ -348,7 +349,7 @@ def connect_to_devices(config, device_names, available):
 @click.option('--verbose', is_flag=True, help='Enable debug logging.')
 def main(config, wizard, verbose):
     if verbose:
-        logging.basicConfig(level='DEBUG')
+        logger.setLevel(level='DEBUG')
 
     if wizard:
         return config_wizard()
