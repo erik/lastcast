@@ -380,7 +380,7 @@ def main(config, wizard, verbose):
     listeners, missing = connect_to_devices(config, device_names, available)
 
     retry_missing = cast_config.get('retry_missing', False)
-    if cast_config.get('ignore_missing', False):
+    if cast_config.get('ignore_missing', False) and missing:
         click.echo('Continuing without missing devices: %s' % ', '.join(missing))
         missing = []
 
