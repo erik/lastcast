@@ -349,7 +349,10 @@ def connect_to_devices(config, device_names, available):
 @click.option('--verbose', is_flag=True, help='Enable debug logging.')
 def main(config, wizard, verbose):
     if verbose:
-        logger.setLevel(level='DEBUG')
+        logger.setLevel('DEBUG')
+    else:
+        # pychromecast is by default pretty noisy about caught exceptions
+        logging.getLogger('pychromecast').setLevel('CRITICAL')
 
     if wizard:
         return config_wizard()
