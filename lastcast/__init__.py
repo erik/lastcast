@@ -5,11 +5,10 @@ import sys
 import time
 
 import click
-import pylast
 import pychromecast
-import toml
-
 from pychromecast.error import PyChromecastError
+import pylast
+import toml
 
 
 logger = logging.getLogger(__name__)
@@ -257,21 +256,17 @@ Key and Shared Secret.
 
         config['lastfm'] = {
             key: click.prompt(key, type=str, hide_input=hidden)
-            for (key, hidden) in [
-                    ('user_name', False),
-                    ('password', True),
-                    ('api_key', False),
-                    ('api_secret', True)
-            ]
+            for (key, hidden) in [('user_name', False),
+                                  ('password', True),
+                                  ('api_key', False),
+                                  ('api_secret', True)]
         }
 
     if click.confirm('Set up Libre.fm account?'):
         libre_conf = {
             key: click.prompt(key, type=str, hide_input=hidden)
-            for (key, hidden) in [
-                    ('user_name', False),
-                    ('password', True)
-            ]
+            for (key, hidden) in [('user_name', False),
+                                  ('password', True)]
         }
 
         libre = pylast.LibreFMNetwork(
@@ -389,11 +384,11 @@ def main(config, wizard, verbose):
         missing = []
 
     if missing and not retry_missing:
-            click.echo('Failed to connect to %s. Exiting' % ', '.join(missing))
-            click.echo('Available devices: %s' % ', '.join([
-                d.device.friendly_name for d in available
-            ]))
-            sys.exit(1)
+        click.echo('Failed to connect to %s. Exiting' % ', '.join(missing))
+        click.echo('Available devices: %s' % ', '.join([
+            d.device.friendly_name for d in available
+        ]))
+        sys.exit(1)
 
     for i in itertools.count():
         for listener in listeners:
