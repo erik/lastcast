@@ -3,17 +3,15 @@ import logging
 import os.path
 import sys
 import time
-import traceback
 
 import click
-import pylast
 import pychromecast
+from pychromecast.error import PyChromecastError
+import pylast
 import toml
 
-from pychromecast.error import PyChromecastError
 
-
-logging.basicConfig()
+logger = logging.getLogger(__name__)
 
 # Default set of apps to scrobble from.
 APP_WHITELIST = ['Spotify', 'Google Play Music', 'SoundCloud', 'Plex']
@@ -81,7 +79,7 @@ class ScrobbleListener(object):
         # This could happen due to network hiccups, Chromecast
         # restarting, race conditions, etc...
         except (PyChromecastError, pylast.NetworkError):
-            traceback.print_exc()
+            logger.info('poll(%s) failed', self.cast_name, exc_info=True)
             self.cast = None
 
     def _poll(self):
@@ -193,8 +191,12 @@ class ScrobbleListener(object):
         for scrobbler in self.scrobblers:
             try:
                 scrobbler.update_now_playing(**track_meta)
-            except (pylast.NetworkError, pylast.MalformedResponseError):
-                logging.exception('update_now_playing failed for %s', scrobbler.name)
+            except (pylast.NetworkError, pylast.MalformedResponseError) as exc:
+                click.echo('Failed to update now playing for {}: {}'.format(
+                    scrobbler.name, str(exc)))
+
+                logger.info('_log_now_playing(%s) failed', scrobbler.name,
+                            exc_info=True)
 
         # First time this track has been seen, so reset the estimated
         # current time if we're using the spotify hack
@@ -211,8 +213,12 @@ class ScrobbleListener(object):
         for scrobbler in self.scrobblers:
             try:
                 scrobbler.scrobble(timestamp=int(time.time()), **track_meta)
-            except (pylast.NetworkError, pylast.MalformedResponseError):
-                logging.exception('scrobble failed for %s', scrobbler.name)
+            except (pylast.NetworkError, pylast.MalformedResponseError) as exc:
+                click.echo('Failed to scrobble to {}: {}'.format(
+                    scrobbler.name, str(exc)))
+
+                logger.info('_log_scrobble(%s) failed', scrobbler.name,
+                            exc_info=True)
 
         self.last_scrobbled = track_meta
 
@@ -250,21 +256,17 @@ Key and Shared Secret.
 
         config['lastfm'] = {
             key: click.prompt(key, type=str, hide_input=hidden)
-            for (key, hidden) in [
-                    ('user_name', False),
-                    ('password', True),
-                    ('api_key', False),
-                    ('api_secret', True)
-            ]
+            for (key, hidden) in [('user_name', False),
+                                  ('password', True),
+                                  ('api_key', False),
+                                  ('api_secret', True)]
         }
 
     if click.confirm('Set up Libre.fm account?'):
         libre_conf = {
             key: click.prompt(key, type=str, hide_input=hidden)
-            for (key, hidden) in [
-                    ('user_name', False),
-                    ('password', True)
-            ]
+            for (key, hidden) in [('user_name', False),
+                                  ('password', True)]
         }
 
         libre = pylast.LibreFMNetwork(
@@ -303,7 +305,8 @@ Key and Shared Secret.
     click.echo('\n\nDefault chromecast apps to scrobble from: %s' %
                ', '.join(APP_WHITELIST))
 
-    apps = click.prompt('Comma separated apps [blank for default]')
+    apps = click.prompt('Comma separated apps [blank for default]',
+                        default='', show_default=False)
     apps = [app.strip() for app in apps.split(',') if app.strip() != '']
 
     if apps:
@@ -338,7 +341,14 @@ def connect_to_devices(config, device_names, available):
 @click.command()
 @click.option('--config', required=False, help='Config file location')
 @click.option('--wizard', is_flag=True, help='Generate a lastcast config.')
-def main(config, wizard):
+@click.option('--verbose', is_flag=True, help='Enable debug logging.')
+def main(config, wizard, verbose):
+    if verbose:
+        logger.setLevel('DEBUG')
+    else:
+        # pychromecast is by default pretty noisy about caught exceptions
+        logging.getLogger('pychromecast').setLevel('CRITICAL')
+
     if wizard:
         return config_wizard()
 
@@ -369,16 +379,16 @@ def main(config, wizard):
     listeners, missing = connect_to_devices(config, device_names, available)
 
     retry_missing = cast_config.get('retry_missing', False)
-    if cast_config.get('ignore_missing', False):
+    if cast_config.get('ignore_missing', False) and missing:
         click.echo('Continuing without missing devices: %s' % ', '.join(missing))
         missing = []
 
     if missing and not retry_missing:
-            click.echo('Failed to connect to %s. Exiting' % ', '.join(missing))
-            click.echo('Available devices: %s' % ', '.join([
-                d.device.friendly_name for d in available
-            ]))
-            sys.exit(1)
+        click.echo('Failed to connect to %s. Exiting' % ', '.join(missing))
+        click.echo('Available devices: %s' % ', '.join([
+            d.device.friendly_name for d in available
+        ]))
+        sys.exit(1)
 
     for i in itertools.count():
         for listener in listeners:
