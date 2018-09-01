@@ -4,8 +4,8 @@ lastcast
 Scrobble music playing on Chromecast devices to last.fm and libre.fm.
 
 By default, lastcast will scrobble music playing on Spotify,
-Google Play Music, SoundCloud, and Plex, but can be configured to
-scrobble any media player that supports Chromecast.
+Google Play Music, SoundCloud, Plex, and YouTube Music but can
+be configured to scrobble any media player that supports Chromecast.
 
 **A Note for Spotify Users:**
 

@@ -14,7 +14,7 @@ import toml
 logger = logging.getLogger(__name__)
 
 # Default set of apps to scrobble from.
-APP_WHITELIST = ['Spotify', 'Google Play Music', 'SoundCloud', 'Plex']
+APP_WHITELIST = ['Spotify', 'Google Play Music', 'SoundCloud', 'Plex', 'YouTube Music']
 
 SCROBBLE_THRESHOLD_PCT = 0.50
 SCROBBLE_THRESHOLD_SECS = 120
