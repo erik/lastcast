@@ -59,6 +59,29 @@ Linux / systemd instructions
    [Install]
    WantedBy=network-online.target
 
+Linux / systemd troubleshooting
+-------------------------------
+
+If your lastcast installation is not scrobbling check its log calling ``journalctl -f _COMM=lastcast``
+
+If you see the following error
+
+.. code-block:: bash
+
+    Sep 01 13:52:07 angel lastcast[13546]: RuntimeError: Click will abort further execution because Python 3 was configured to use ASCII as encoding for the environment.  Consult http:
+    Sep 01 13:52:07 angel lastcast[13546]: This system supports the C.UTF-8 locale which is recommended.
+    Sep 01 13:52:07 angel lastcast[13546]: You might be able to resolve your issue by exporting the
+    Sep 01 13:52:07 angel lastcast[13546]: following environment variables:
+    Sep 01 13:52:07 angel lastcast[13546]:     export LC_ALL=C.UTF-8
+    Sep 01 13:52:07 angel lastcast[13546]:     export LANG=C.UTF-8
+
+modify the ``lastcast.service`` file you created in the previous section as by adding the following
+to the ``[Service]`` section
+
+.. code-block:: ini
+
+    Environment="LC_ALL=C.UTF-8"
+    Environment="LANG=C.UTF-8"
 
 Detailed macOS setup
 --------------------
