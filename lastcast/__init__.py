@@ -134,7 +134,7 @@ class ScrobbleListener(object):
             self.current_time = status.current_time
 
         # We know music is playing, want to check what to update
-        self._on_media_controller_status(status)
+        self._on_media_controller_status(current_app, status)
 
     def _connect_chromecast(self, available_devices=None):
         ''' Attempt to (re)connect to cast device named in `__init__`. '''
@@ -162,13 +162,17 @@ class ScrobbleListener(object):
         self.cast.wait()
         click.echo('Using chromecast: %s' % self.cast.device.friendly_name)
 
-    def _on_media_controller_status(self, status):
+    def _on_media_controller_status(self, app, status):
         ''' Handle a status object returned from MediaController '''
         meta = {
             'artist': status.artist if status.artist else status.album_artist,
             'album': status.album_name,
             'title': status.title,
         }
+
+        # In free-tier Spotify, ads will show up like this (see #49)
+        if app == meta['artist'] == meta['title'] == 'Spotify':
+            return
 
         # Only need to update the now playing once for each track
         if meta != self.current_track:
