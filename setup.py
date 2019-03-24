@@ -12,7 +12,7 @@ if sys.version_info < (3, 5):
 
 setup(
     name='lastcast',
-    version='1.2.0',
+    version='1.2.1',
     description='Scrobble music to last.fm from Chromecast.',
     author='Erik Price',
     url='https://github.com/erik/lastcast',
