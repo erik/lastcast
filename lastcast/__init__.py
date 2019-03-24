@@ -170,9 +170,17 @@ class ScrobbleListener(object):
             'title': status.title,
         }
 
-        # In free-tier Spotify, ads will show up like this (see #49)
-        if app == meta['artist'] == 'Spotify':
-            return
+        # Filter out ads from free-tier Spotify (see #49)
+        if app == 'Spotify':
+            # First party ads have 'Spotify' as the artist
+            is_spotify_ad = meta['artist'] == 'Spotify'
+
+            # Third party ads have title 'Advertisement' and an empty
+            # album.
+            is_3p_ad = meta['title'] == 'Advertisement' and not meta['album']
+
+            if is_spotify_ad or is_3p_ad:
+                return
 
         # Only need to update the now playing once for each track
         if meta != self.current_track:
