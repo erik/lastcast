@@ -171,7 +171,7 @@ class ScrobbleListener(object):
         }
 
         # In free-tier Spotify, ads will show up like this (see #49)
-        if app == meta['artist'] == meta['title'] == 'Spotify':
+        if app == meta['artist'] == 'Spotify':
             return
 
         # Only need to update the now playing once for each track
