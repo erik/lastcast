@@ -107,6 +107,7 @@ Docker setup
 ----------------------------
 Docker uses "volume" in order to link the configuration file setup into the Docker container.
 On your local machine create a directory containing your configured `lastcast.toml` configuration file
+
 .. code:: bash
 
    $ configDirectory=YourLocalConfigurationDirectory
