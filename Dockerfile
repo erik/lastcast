@@ -11,4 +11,4 @@ COPY . /app
 RUN pip3 install --upgrade lastcast
 
 # Run app.py when the container launches
-CMD ["lastcast"]
+CMD ["lastcast --config /config"]
