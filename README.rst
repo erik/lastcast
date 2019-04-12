@@ -112,7 +112,7 @@ On your local machine create a directory containing your configured `lastcast.to
 
    $ configDirectory=YourLocalConfigurationDirectory
    $ docker pull erik/lastcast
-   $ docker run -it --name lastcast -v $configDirectory:/config erik/lastcast:lastest
+   $ docker run -it --net=host --name lastcast -v $configDirectory:/config erik/lastcast:lastest
 
 
 No Chromecast devices found?
