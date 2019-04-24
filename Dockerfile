@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-# Install any needed packages specified in requirements.txt
+# Install lastcast along with any requirements
 RUN python setup.py install
 
-# Run app.py when the container launches
+# Run lastcast when the container launches
 CMD ["lastcast", "--config", "/lastcast.toml"]
