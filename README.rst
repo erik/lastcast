@@ -109,13 +109,24 @@ Docker setup
 ``lastcast`` uses a Docker volume in order to link the configuration file
 into the container.
 
-Make sure to pass an absolute path to the ``-v`` argument.
-
 .. code:: bash
+   # Path to configuration file. Make sure to use an absolute path.
+   export CONFIG_PATH=/path/to/your/lastcast.toml
 
-   $ configPath=/path/to/your/lastcast.toml
-   $ docker pull rkprc/lastcast
-   $ docker run -it --net=host --name lastcast -v $configPath:/lastcast.toml rkprc/lastcast:latest
+   docker pull rkprc/lastcast
+
+   docker run -it                   \
+     --net=host                     \
+     --name lastcast                \
+     -v $CONFIG_PATH:/lastcast.toml \
+     rkprc/lastcast
+
+   # If you need to generate a config file, run the wizard:
+   docker run -it                   \
+     --net=host                     \
+     -v $CONFIG_PATH:/lastcast.toml \
+     rkprc/lastcast                 \
+     lastcast --wizard
 
 No Chromecast devices found?
 ----------------------------
