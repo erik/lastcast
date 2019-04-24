@@ -110,6 +110,7 @@ Docker setup
 into the container.
 
 .. code:: bash
+
    # Path to configuration file. Make sure to use an absolute path.
    export CONFIG_PATH=/path/to/your/lastcast.toml
 
