@@ -103,6 +103,18 @@ install xcode by running ``xcode-select --install`` and retry step 2.
 Now everything should be set up. When you want to start scrobbling, simply
 run ``lastcast`` in the terminal.
 
+Docker setup
+----------------------------
+Docker uses "volume" in order to link the configuration file setup into the Docker container.
+On your local machine create a directory containing your configured `lastcast.toml` configuration file
+
+.. code:: bash
+
+   $ configDirectory=YourLocalConfigurationDirectory
+   $ docker pull erik/lastcast
+   $ docker run -it --net=host --name lastcast -v $configDirectory:/config erik/lastcast:lastest
+
+
 No Chromecast devices found?
 ----------------------------
 
