@@ -11,4 +11,4 @@ COPY . /app
 RUN python setup.py install
 
 # Run app.py when the container launches
-CMD ["lastcast --config /config"]
+CMD ["lastcast", "--config", "/lastcast.toml"]
