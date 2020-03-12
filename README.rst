@@ -50,14 +50,18 @@ Linux / systemd instructions
    [Unit]
    Description=lastcast
    Requires=networking.service
+   After=network-online.target
+   Wants=network-online.target
 
    [Service]
-   ExecStart=/usr/local/bin/lastcast --config [PATH TO ~/.lastcast.toml]
+   ExecStart=/usr/local/bin/lastcast --config [PATH TO lastcast.toml]
    Restart=always
    RestartSec=5
+   # Set this to run as your user rather than root!
+   User=pi
 
    [Install]
-   WantedBy=network-online.target
+   WantedBy=multi-user.target
 
 Linux / systemd troubleshooting
 -------------------------------
@@ -68,12 +72,15 @@ If you see the following error
 
 .. code-block:: bash
 
-    Sep 01 13:52:07 angel lastcast[13546]: RuntimeError: Click will abort further execution because Python 3 was configured to use ASCII as encoding for the environment.  Consult http:
-    Sep 01 13:52:07 angel lastcast[13546]: This system supports the C.UTF-8 locale which is recommended.
-    Sep 01 13:52:07 angel lastcast[13546]: You might be able to resolve your issue by exporting the
-    Sep 01 13:52:07 angel lastcast[13546]: following environment variables:
-    Sep 01 13:52:07 angel lastcast[13546]:     export LC_ALL=C.UTF-8
-    Sep 01 13:52:07 angel lastcast[13546]:     export LANG=C.UTF-8
+    RuntimeError: Click will abort further execution because Python 3 was
+    configured to use ASCII as encoding for the environment.
+
+    This system supports the C.UTF-8 locale which is recommended.
+    You might be able to resolve your issue by exporting the
+    following environment variables:
+
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
 
 modify the ``lastcast.service`` file you created in the previous section as by adding the following
 to the ``[Service]`` section
