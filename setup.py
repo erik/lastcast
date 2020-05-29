@@ -29,7 +29,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        'PyChromecast==2.0.0',
+        'PyChromecast==5.3.0',
         'click==6.7',
         'pylast==1.7.0',
         'toml==0.9.4',
