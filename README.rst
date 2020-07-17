@@ -10,7 +10,7 @@ be configured to scrobble any media player that supports Chromecast.
 **A Note for Spotify Users:**
 
 Last.fm now has `first class
-support <https://getsatisfaction.com/lastfm/topics/spotify-scrobbling>`_
+support <https://support.last.fm/t/spotify-scrobbling/189>`_
 for Spotify, and you should probably use this rather than lastcast.
 
 **Python 3.5 and earlier are no longer supported as of lastcast 1.0.0.**
