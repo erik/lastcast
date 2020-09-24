@@ -416,6 +416,3 @@ def main(config, wizard, verbose):
 
         time.sleep(POLL_INTERVAL)
 
-
-if __name__ == '__main__':
-    main()

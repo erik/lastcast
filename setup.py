@@ -12,14 +12,14 @@ if sys.version_info < (3, 6):
 
 setup(
     name='lastcast',
-    version='2.0.0',
+    version='2.0.1',
     description='Scrobble music to last.fm from Chromecast.',
     author='Erik Price',
     url='https://github.com/erik/lastcast',
     packages=['lastcast'],
     entry_points={
         'console_scripts': [
-            'lastcast = lastcast:main',
+            'lastcast = lastcast.__main__:main',
         ],
     },
     license='MIT',
