@@ -30,8 +30,8 @@ setup(
     ],
     install_requires=[
         'PyChromecast==12.1.4',
-        'click==6.7',
-        'pylast==1.7.0',
-        'toml==0.9.4',
+        'click==8.1.3',
+        'pylast==5.0.0',
+        'toml==0.10.2',
     ]
 )
