@@ -2,10 +2,10 @@ import sys
 from setuptools import setup
 
 
-# Be verbose about Python < 3.6 being deprecated.
-if sys.version_info < (3, 6):
+# Be verbose about Python < 3.7 being deprecated.
+if sys.version_info < (3, 7):
     print('\n' * 3 + '*' * 64)
-    print('lastcast requires Python 3.6+, and might be broken if run with\n'
+    print('lastcast requires Python 3.7+, and might be broken if run with\n'
           'this version of Python.')
     print('*' * 64 + '\n' * 3)
 
