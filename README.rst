@@ -120,19 +120,19 @@ into the container.
    # Path to configuration file. Make sure to use an absolute path.
    export CONFIG_PATH=/path/to/your/lastcast.toml
 
-   docker pull rkprc/lastcast
+   docker build -t lastcast .
 
    docker run -it                   \
      --net=host                     \
      --name lastcast                \
      -v $CONFIG_PATH:/lastcast.toml \
-     rkprc/lastcast
+     lastcast
 
    # If you need to generate a config file, run the wizard:
    docker run -it                   \
      --net=host                     \
      -v $CONFIG_PATH:/lastcast.toml \
-     rkprc/lastcast                 \
+     lastcast                       \
      lastcast --wizard
 
 No Chromecast devices found?
