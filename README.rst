@@ -13,9 +13,8 @@ Last.fm now has `first class
 support <https://support.last.fm/t/spotify-scrobbling/189>`_
 for Spotify, and you should probably use this rather than lastcast.
 
-**Python 3.5 and earlier are no longer supported as of lastcast 1.0.0.**
-
-If you need Python 2, please install ``lastcast==0.7.0``.
+Requires Python 3.7+. **If you need Python 2** please install
+``lastcast==0.7.0``
 
 Getting started
 ---------------
