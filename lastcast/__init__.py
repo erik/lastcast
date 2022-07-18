@@ -142,11 +142,11 @@ class ScrobbleListener(object):
         self.cast = None
 
         if not available_devices:
-            available_devices = pychromecast.get_chromecasts(tries=1)
+            available_devices, browser = pychromecast.get_chromecasts(tries=1)
 
         matching_devices = [
             c for c in available_devices
-            if c.device.friendly_name == self.cast_name
+            if c.cast_info.friendly_name == self.cast_name
         ]
 
         if not matching_devices:
@@ -160,7 +160,7 @@ class ScrobbleListener(object):
 
         # Wait for the device to be available
         self.cast.wait()
-        click.echo('Using chromecast: %s' % self.cast.device.friendly_name)
+        click.echo('Using chromecast: %s' % self.cast.cast_info.friendly_name)
 
     def _on_media_controller_status(self, app, status):
         ''' Handle a status object returned from MediaController '''
@@ -300,7 +300,7 @@ Key and Shared Secret.
         config['librefm'] = libre_conf
 
     available = [
-        cc.device.friendly_name for cc in
+        cc.cast_info.friendly_name for cc in
         pychromecast.get_chromecasts()
     ]
 
@@ -387,7 +387,7 @@ def main(config, wizard, verbose):
                    '`[chromecast]` config block!')
         sys.exit(1)
 
-    available = pychromecast.get_chromecasts()
+    available, browser = pychromecast.get_chromecasts()
     listeners, missing = connect_to_devices(config, device_names, available)
 
     retry_missing = cast_config.get('retry_missing', False)
@@ -398,7 +398,7 @@ def main(config, wizard, verbose):
     if missing and not retry_missing:
         click.echo('Failed to connect to %s. Exiting' % ', '.join(missing))
         click.echo('Available devices: %s' % ', '.join([
-            d.device.friendly_name for d in available
+            d.cast_info.friendly_name for d in available
         ]))
         sys.exit(1)
 
@@ -409,7 +409,7 @@ def main(config, wizard, verbose):
         # If we have any devices missing, periodically try to connect to them
         if retry_missing and missing and i % RECONNECT_INTERVAL == 0:
             click.echo('Retrying missing devices: %s' % ', '.join(missing))
-            available = pychromecast.get_chromecasts(tries=1)
+            available, browser = pychromecast.get_chromecasts(tries=1)
 
             new_devices, missing = connect_to_devices(config, missing, available)
             listeners.extend(new_devices)
