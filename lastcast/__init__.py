@@ -299,9 +299,10 @@ Key and Shared Secret.
         libre_conf['session_key'] = skg.get_web_auth_session_key(url)
         config['librefm'] = libre_conf
 
+    devices, _browser = pychromecast.get_chromecasts()
     available = [
         cc.cast_info.friendly_name for cc in
-        pychromecast.get_chromecasts()
+        devices
     ]
 
     if len(available) == 1:
@@ -415,4 +416,3 @@ def main(config, wizard, verbose):
             listeners.extend(new_devices)
 
         time.sleep(POLL_INTERVAL)
-
